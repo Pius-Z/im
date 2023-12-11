@@ -42,7 +42,7 @@ public class ResponseVO<T> {
         return new ResponseVO<>(enums.getCode(), enums.getError());
     }
 
-    public boolean isOk(){
+    public boolean isOk() {
         return this.code == 200;
     }
 
@@ -51,13 +51,13 @@ public class ResponseVO<T> {
         this.msg = msg;
     }
 
-    public ResponseVO<T> success(){
+    public ResponseVO<T> success() {
         this.code = 200;
         this.msg = "success";
         return this;
     }
 
-    public ResponseVO<T>  success(T data){
+    public ResponseVO<T> success(T data) {
         this.code = 200;
         this.msg = "success";
         this.data = data;

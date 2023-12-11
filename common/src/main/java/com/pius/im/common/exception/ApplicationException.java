@@ -21,13 +21,14 @@ public class ApplicationException extends RuntimeException {
 
     public ApplicationException(ApplicationExceptionEnum exceptionEnum) {
         super(exceptionEnum.getError());
-        this.code   = exceptionEnum.getCode();
-        this.error  = exceptionEnum.getError();
+        this.code = exceptionEnum.getCode();
+        this.error = exceptionEnum.getError();
     }
 
     /**
-     *  avoid the expensive and useless stack trace for api exceptions
-     *  @see Throwable#fillInStackTrace()
+     * avoid the expensive and useless stack trace for api exceptions
+     *
+     * @see Throwable#fillInStackTrace()
      */
     @Override
     public Throwable fillInStackTrace() {
