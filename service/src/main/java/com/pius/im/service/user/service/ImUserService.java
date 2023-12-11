@@ -16,7 +16,7 @@ public interface ImUserService {
 
     ResponseVO<ImportOrDeleteUserResp> deleteUser(DeleteUserReq req);
 
-    ResponseVO<ImUserDataEntity> getSingleUserInfo(GetSingleUserInfoReq req);
+    ResponseVO<ImUserDataEntity> getSingleUserInfo(String userId , Integer appId);
 
     ResponseVO<GetUserInfoResp> getUserInfo(GetUserInfoReq req);
 

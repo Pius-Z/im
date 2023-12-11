@@ -27,7 +27,7 @@ public class ImUserDataController {
 
     @RequestMapping(value = "/getSingleUserInfo", method = RequestMethod.GET)
     public ResponseVO<ImUserDataEntity> getSingleUserInfo(@RequestBody @Validated GetSingleUserInfoReq req) {
-        return imUserService.getSingleUserInfo(req);
+        return imUserService.getSingleUserInfo(req.getUserId(), req.getAppId());
     }
 
     @RequestMapping(value = "/getUserInfo", method = RequestMethod.GET)

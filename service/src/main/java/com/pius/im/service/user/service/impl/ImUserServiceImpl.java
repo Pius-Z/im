@@ -108,10 +108,10 @@ public class ImUserServiceImpl implements ImUserService {
     }
 
     @Override
-    public ResponseVO<ImUserDataEntity> getSingleUserInfo(GetSingleUserInfoReq req) {
+    public ResponseVO<ImUserDataEntity> getSingleUserInfo(String userId , Integer appId) {
         QueryWrapper<ImUserDataEntity> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("app_id", req.getAppId());
-        queryWrapper.eq("user_id", req.getUserId());
+        queryWrapper.eq("app_id", appId);
+        queryWrapper.eq("user_id", userId);
         queryWrapper.eq("del_flag", DelFlagEnum.NORMAL.getCode());
 
         ImUserDataEntity imUserDataEntity = imUserDataMapper.selectOne(queryWrapper);
