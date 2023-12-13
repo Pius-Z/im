@@ -18,6 +18,8 @@ public interface ImFriendService {
 
     ResponseVO addFriend(AddFriendReq req);
 
+    ResponseVO doAddFriend(String fromId, FriendDto dto, Integer appId);
+
     ResponseVO updateFriend(UpdateFriendReq req);
 
     ResponseVO deleteFriend(DeleteFriendReq req);

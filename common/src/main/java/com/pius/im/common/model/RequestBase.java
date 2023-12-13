@@ -13,4 +13,6 @@ public class RequestBase {
     @NotNull(message = "appId不能为空")
     private Integer appId;
 
+    private String operator;
+
 }
