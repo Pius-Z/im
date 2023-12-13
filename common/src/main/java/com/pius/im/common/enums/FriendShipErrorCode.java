@@ -37,6 +37,12 @@ public enum FriendShipErrorCode implements ApplicationExceptionEnum {
     NOT_APPROVE_OTHER_MAN_REQUEST(30011, "无法审批其他人的好友请求"),
 
     FRIEND_REQUEST_IS_NOT_EXIST(30012, "好友申请不存在"),
+
+    FRIEND_SHIP_GROUP_CREATE_ERROR(30013, "好友分组创建失败"),
+
+    FRIEND_SHIP_GROUP_IS_EXIST(30014, "好友分组已存在"),
+
+    FRIEND_SHIP_GROUP_IS_NOT_EXIST(30015, "好友分组不存在"),
     ;
 
     private int code;
