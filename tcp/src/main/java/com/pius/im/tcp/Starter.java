@@ -1,6 +1,7 @@
 package com.pius.im.tcp;
 
 import com.pius.im.codec.config.BootstrapConfig;
+import com.pius.im.tcp.redis.RedisManager;
 import com.pius.im.tcp.server.ImServer;
 import com.pius.im.tcp.server.ImWebSocketServer;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +32,7 @@ public class Starter {
 
             new ImServer(bootstrapConfig.getIm()).start();
             new ImWebSocketServer(bootstrapConfig.getIm()).start();
+            RedisManager.init(bootstrapConfig);
         } catch (Exception e) {
             log.error(Arrays.toString(e.getStackTrace()));
             System.exit(500);
