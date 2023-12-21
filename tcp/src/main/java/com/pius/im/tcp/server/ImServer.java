@@ -2,6 +2,7 @@ package com.pius.im.tcp.server;
 
 import com.pius.im.codec.MessageDecoder;
 import com.pius.im.codec.config.BootstrapConfig;
+import com.pius.im.tcp.handler.HeartBeatHandler;
 import com.pius.im.tcp.handler.NettyServerHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelInitializer;
@@ -10,6 +11,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.timeout.IdleStateHandler;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -39,6 +41,8 @@ public class ImServer {
                     @Override
                     protected void initChannel(SocketChannel ch) {
                         ch.pipeline().addLast(new MessageDecoder());
+                        ch.pipeline().addLast(new IdleStateHandler(0, 0, 3));
+                        ch.pipeline().addLast(new HeartBeatHandler(config.getHeartBeatTime()));
                         ch.pipeline().addLast(new NettyServerHandler());
                     }
                 });

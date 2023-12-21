@@ -20,6 +20,9 @@ public class Constants {
 
     public static final String Imei = "imei";
 
+    public static final String ReadTime = "readTime";
+
+
     public static class RedisConstants {
 
         /**

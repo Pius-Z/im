@@ -41,6 +41,7 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<Message> {
             channelHandlerContext.channel().attr(AttributeKey.valueOf(Constants.AppId)).set(message.getMessageHeader().getAppId());
             channelHandlerContext.channel().attr(AttributeKey.valueOf(Constants.ClientType)).set(message.getMessageHeader().getClientType());
             channelHandlerContext.channel().attr(AttributeKey.valueOf(Constants.Imei)).set(message.getMessageHeader().getImei());
+            channelHandlerContext.channel().attr(AttributeKey.valueOf(Constants.ReadTime)).set(System.currentTimeMillis());
 
             // 创建session
             UserSession userSession = new UserSession();
@@ -61,6 +62,8 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<Message> {
         } else if (command == SystemCommand.LOGOUT.getCommand()) {
             // 登出command
             SessionSocketHolder.removeUserSession((NioSocketChannel) channelHandlerContext.channel());
+        } else if (command == SystemCommand.PING.getCommand()) {
+            channelHandlerContext.channel().attr(AttributeKey.valueOf(Constants.ReadTime)).set(System.currentTimeMillis());
         }
 
     }
