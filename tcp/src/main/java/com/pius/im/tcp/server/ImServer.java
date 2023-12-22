@@ -43,7 +43,7 @@ public class ImServer {
                         ch.pipeline().addLast(new MessageDecoder());
                         ch.pipeline().addLast(new IdleStateHandler(0, 0, 3));
                         ch.pipeline().addLast(new HeartBeatHandler(config.getHeartBeatTime()));
-                        ch.pipeline().addLast(new NettyServerHandler());
+                        ch.pipeline().addLast(new NettyServerHandler(config.getBrokerId()));
                     }
                 });
     }

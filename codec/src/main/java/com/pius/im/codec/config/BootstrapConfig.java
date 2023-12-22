@@ -32,7 +32,7 @@ public class BootstrapConfig {
         // work线程
         private Integer workThreadSize;
 
-        //心跳超时时间 单位毫秒
+        // 心跳超时时间 单位毫秒
         private Long heartBeatTime;
 
         /**
@@ -44,6 +44,16 @@ public class BootstrapConfig {
          * rabbitmq配置
          */
         private Rabbitmq rabbitmq;
+
+        /**
+         * zk配置
+         */
+        private ZkConfig zkConfig;
+
+        /**
+         * brokerId
+         */
+        private Integer brokerId;
 
     }
 
@@ -123,6 +133,19 @@ public class BootstrapConfig {
 
         private String password;
 
+    }
+
+    @Data
+    public static class ZkConfig {
+        /**
+         * zk连接地址
+         */
+        private String zkAddr;
+
+        /**
+         * zk连接超时时间
+         */
+        private Integer zkConnectTimeOut;
     }
 
 }

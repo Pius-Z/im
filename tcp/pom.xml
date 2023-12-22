@@ -66,6 +66,12 @@
             <version>5.20.0</version>
         </dependency>
 
+        <!-- zkclient -->
+        <dependency>
+            <groupId>com.github.sgroschupf</groupId>
+            <artifactId>zkclient</artifactId>
+            <version>0.1</version>
+        </dependency>
 
     </dependencies>
 

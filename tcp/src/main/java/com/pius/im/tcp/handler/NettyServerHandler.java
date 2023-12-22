@@ -15,16 +15,24 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.AttributeKey;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RMap;
 import org.redisson.api.RedissonClient;
+
+import java.net.InetAddress;
+import java.util.Arrays;
 
 /**
  * @Author: Pius
  * @Date: 2023/12/20
  */
 @Slf4j
+@AllArgsConstructor
 public class NettyServerHandler extends SimpleChannelInboundHandler<Message> {
+
+    private Integer brokerId;
+
     @Override
     protected void channelRead0(ChannelHandlerContext channelHandlerContext, Message message) {
 
@@ -50,6 +58,12 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<Message> {
             userSession.setUserId(loginPack.getUserId());
             userSession.setConnectState(ImConnectStatusEnum.ONLINE_STATUS.getCode());
             userSession.setImei(message.getMessageHeader().getImei());
+            userSession.setBrokerId(brokerId);
+            try {
+                userSession.setBrokerHost(InetAddress.getLocalHost().getHostAddress());
+            } catch (Exception e) {
+                log.error(Arrays.toString(e.getStackTrace()));
+            }
 
             // 将session存入缓存
             RedissonClient redissonClient = RedisManager.getRedissonClient();
