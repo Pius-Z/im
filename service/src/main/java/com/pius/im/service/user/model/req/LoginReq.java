@@ -16,4 +16,7 @@ public class LoginReq extends RequestBase {
     @NotNull(message = "用户id不能为空")
     private String userId;
 
+    @NotNull(message = "客户端类型不能为空")
+    private Integer clientType;
+
 }

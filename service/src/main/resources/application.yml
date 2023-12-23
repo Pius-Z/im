@@ -7,6 +7,10 @@ spring:
     username: root
     password: root111111
 
+appConfig:
+  zkAddr: 124.223.32.11:2181 # zk连接地址
+  zkConnectTimeOut: 10000 #zk超时时间
+
 # logger 配置
 logging:
   config: classpath:logback-spring.xml
