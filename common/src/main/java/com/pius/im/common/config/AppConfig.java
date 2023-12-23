@@ -19,4 +19,10 @@ public class AppConfig {
     /** zk连接超时时间*/
     private Integer zkConnectTimeOut;
 
+    /** netty服务器路由策略 */
+    private Integer imRouteStrategy;
+
+    /** 一致性hash的具体实现 */
+    private Integer consistentHashImpl;
+
 }
