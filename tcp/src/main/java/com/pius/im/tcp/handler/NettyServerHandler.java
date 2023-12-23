@@ -8,6 +8,7 @@ import com.pius.im.codec.proto.Message;
 import com.pius.im.common.constant.Constants;
 import com.pius.im.common.enums.ImConnectStatusEnum;
 import com.pius.im.common.enums.command.SystemCommand;
+import com.pius.im.common.model.UserClientDto;
 import com.pius.im.common.model.UserSession;
 import com.pius.im.tcp.redis.RedisManager;
 import com.pius.im.tcp.utils.SessionSocketHolder;
@@ -18,6 +19,7 @@ import io.netty.util.AttributeKey;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RMap;
+import org.redisson.api.RTopic;
 import org.redisson.api.RedissonClient;
 
 import java.net.InetAddress;
@@ -73,6 +75,14 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<Message> {
             // 保存channel
             SessionSocketHolder.put(message.getMessageHeader().getAppId(), loginPack.getUserId(), message.getMessageHeader().getClientType(),
                     message.getMessageHeader().getImei(), (NioSocketChannel) channelHandlerContext.channel());
+
+            UserClientDto dto = new UserClientDto();
+            dto.setAppId(message.getMessageHeader().getAppId());
+            dto.setUserId(loginPack.getUserId());
+            dto.setClientType(message.getMessageHeader().getClientType());
+            dto.setImei(message.getMessageHeader().getImei());
+            RTopic topic = redissonClient.getTopic(Constants.RedisConstants.UserLoginChannel);
+            topic.publish(JSONObject.toJSONString(dto));
         } else if (command == SystemCommand.LOGOUT.getCommand()) {
             // 登出command
             SessionSocketHolder.removeUserSession((NioSocketChannel) channelHandlerContext.channel());

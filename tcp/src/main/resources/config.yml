@@ -5,6 +5,11 @@ im:
   workThreadSize: 8
   heartBeatTime: 10000 #心跳超时时间 单位毫秒
   brokerId: 1000
+  loginModel: 3
+  # 多端登录模式：1 只允许一端在线，手机/电脑/web 踢掉除了本client+imei的设备
+  #            2 允许手机/电脑的一台设备 + web在线 踢掉除了本client+imei的非web端设备
+  #            3 允许手机和电脑单设备 + web 同时在线 踢掉非本client+imei的同端设备
+  #            4 允许所有端多设备登录 不踢任何设备
 
   redis:
     mode: single # 单机模式：single 哨兵模式：sentinel 集群模式：cluster
@@ -24,4 +29,4 @@ im:
     password: 123456
   zkConfig:
     zkAddr: 124.223.32.11:2181
-    zkConnectTimeOut: 5000
+    zkConnectTimeOut: 10000

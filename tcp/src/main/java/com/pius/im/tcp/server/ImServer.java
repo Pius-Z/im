@@ -1,6 +1,7 @@
 package com.pius.im.tcp.server;
 
 import com.pius.im.codec.MessageDecoder;
+import com.pius.im.codec.MessageEncoder;
 import com.pius.im.codec.config.BootstrapConfig;
 import com.pius.im.tcp.handler.HeartBeatHandler;
 import com.pius.im.tcp.handler.NettyServerHandler;
@@ -41,6 +42,7 @@ public class ImServer {
                     @Override
                     protected void initChannel(SocketChannel ch) {
                         ch.pipeline().addLast(new MessageDecoder());
+                        ch.pipeline().addLast(new MessageEncoder());
                         ch.pipeline().addLast(new IdleStateHandler(0, 0, 3));
                         ch.pipeline().addLast(new HeartBeatHandler(config.getHeartBeatTime()));
                         ch.pipeline().addLast(new NettyServerHandler(config.getBrokerId()));
