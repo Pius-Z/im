@@ -27,3 +27,11 @@ mybatis-plus:
   global-config:
     db-config:
       update-strategy: NOT_EMPTY
+
+httpclient:
+  maxTotal: 100
+  defaultMaxPerRoute: 50
+  connectTimeout: 2000
+  connectionRequestTimeout: 2000
+  socketTimeout: 5000
+  staleConnectionCheckEnabled: true
