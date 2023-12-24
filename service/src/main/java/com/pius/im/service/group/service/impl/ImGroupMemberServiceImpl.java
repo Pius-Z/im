@@ -108,7 +108,7 @@ public class ImGroupMemberServiceImpl implements ImGroupMemberService {
         群类型 1私有群（类似微信） 2公开群(类似qq）
          */
         if (!isAdmin && groupInfo.getData().getGroupType() == GroupTypeEnum.PUBLIC.getCode()
-                && (!isOwner && isManager)) {
+                && (!isOwner && !isManager)) {
             return ResponseVO.errorResponse(GroupErrorCode.THIS_OPERATE_NEED_MANAGER_ROLE);
         }
 
