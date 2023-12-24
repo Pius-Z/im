@@ -62,4 +62,10 @@ public class Constants {
         public static final String StoreGroupMessage = "storeGroupMessage";
 
     }
+
+    public static class CallbackCommand {
+
+        public static final String ModifyUserAfter = "user.modify.after";
+
+    }
 }

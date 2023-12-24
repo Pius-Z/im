@@ -1,7 +1,10 @@
 package com.pius.im.service.user.service.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.pius.im.common.ResponseVO;
+import com.pius.im.common.config.AppConfig;
+import com.pius.im.common.constant.Constants;
 import com.pius.im.common.enums.DelFlagEnum;
 import com.pius.im.common.enums.UserErrorCode;
 import com.pius.im.common.exception.ApplicationException;
@@ -11,6 +14,7 @@ import com.pius.im.service.user.model.req.*;
 import com.pius.im.service.user.model.resp.GetUserInfoResp;
 import com.pius.im.service.user.model.resp.ImportOrDeleteUserResp;
 import com.pius.im.service.user.service.ImUserService;
+import com.pius.im.service.utils.CallbackService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +34,12 @@ public class ImUserServiceImpl implements ImUserService {
 
     @Autowired
     ImUserDataMapper imUserDataMapper;
+
+    @Autowired
+    CallbackService callbackService;
+
+    @Autowired
+    AppConfig appConfig;
 
     @Override
     public ResponseVO<ImportOrDeleteUserResp> importUser(ImportUserReq req) {
@@ -108,7 +118,7 @@ public class ImUserServiceImpl implements ImUserService {
     }
 
     @Override
-    public ResponseVO<ImUserDataEntity> getSingleUserInfo(String userId , Integer appId) {
+    public ResponseVO<ImUserDataEntity> getSingleUserInfo(String userId, Integer appId) {
         QueryWrapper<ImUserDataEntity> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("app_id", appId);
         queryWrapper.eq("user_id", userId);
@@ -169,6 +179,10 @@ public class ImUserServiceImpl implements ImUserService {
         imUserDataEntity.setUserId(null);
         int update = imUserDataMapper.update(imUserDataEntity, queryWrapper);
         if (update == 1) {
+            if (appConfig.isModifyUserAfterCallback()) {
+                callbackService.callback(req.getAppId(), Constants.CallbackCommand.ModifyUserAfter,
+                        JSONObject.toJSONString(req));
+            }
             return ResponseVO.successResponse();
         }
 
