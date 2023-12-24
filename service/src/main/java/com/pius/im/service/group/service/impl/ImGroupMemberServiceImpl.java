@@ -1,5 +1,7 @@
 package com.pius.im.service.group.service.impl;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -7,6 +9,8 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pius.im.common.ResponseVO;
+import com.pius.im.common.config.AppConfig;
+import com.pius.im.common.constant.Constants;
 import com.pius.im.common.enums.GroupErrorCode;
 import com.pius.im.common.enums.GroupMemberRoleEnum;
 import com.pius.im.common.enums.GroupStatusEnum;
@@ -15,6 +19,7 @@ import com.pius.im.common.exception.ApplicationException;
 import com.pius.im.service.group.dao.ImGroupEntity;
 import com.pius.im.service.group.dao.ImGroupMemberEntity;
 import com.pius.im.service.group.dao.mapper.ImGroupMemberMapper;
+import com.pius.im.service.group.model.callback.AddMemberAfterCallbackDto;
 import com.pius.im.service.group.model.req.*;
 import com.pius.im.service.group.model.resp.AddMemberResp;
 import com.pius.im.service.group.model.resp.GetRoleInGroupResp;
@@ -22,6 +27,7 @@ import com.pius.im.service.group.service.ImGroupMemberService;
 import com.pius.im.service.group.service.ImGroupService;
 import com.pius.im.service.user.dao.ImUserDataEntity;
 import com.pius.im.service.user.service.ImUserService;
+import com.pius.im.service.utils.CallbackService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,6 +52,12 @@ public class ImGroupMemberServiceImpl implements ImGroupMemberService {
 
     @Autowired
     ImGroupService imGroupService;
+
+    @Autowired
+    AppConfig appConfig;
+
+    @Autowired
+    CallbackService callbackService;
 
     @Override
     @Transactional
@@ -87,14 +99,28 @@ public class ImGroupMemberServiceImpl implements ImGroupMemberService {
         ResponseVO<ImGroupEntity> groupInfo = imGroupService.getGroupInfo(req.getGroupId(), req.getAppId());
         if (!groupInfo.isOk()) {
             return ResponseVO.errorResponse(groupInfo.getCode(), groupInfo.getMsg());
+        }
 
+        // 调用回调函数, 接收可以添加的成员名单
+        List<GroupMemberDto> memberDtos = req.getMembers();
+        if (appConfig.isAddGroupMemberBeforeCallback()) {
+            ResponseVO responseVO = callbackService.beforeCallback(req.getAppId(), Constants.CallbackCommand.GroupMemberAddBefore
+                    , JSONObject.toJSONString(req));
+            if (!responseVO.isOk()) {
+                return ResponseVO.errorResponse(responseVO.getCode(), responseVO.getMsg());
+            }
+
+            try {
+                memberDtos = JSONArray.parseArray(JSONObject.toJSONString(responseVO.getData()), GroupMemberDto.class);
+            } catch (Exception e) {
+                log.error("GroupMemberAddBefore 回调失败：{}", req.getAppId());
+            }
         }
 
         // 获取操作人的权限
         ResponseVO<GetRoleInGroupResp> roleInfo = getRoleInGroup(req.getGroupId(), req.getOperator(), req.getAppId());
         if (!roleInfo.isOk()) {
             return ResponseVO.errorResponse(roleInfo.getCode(), roleInfo.getMsg());
-
         }
 
         Integer role = roleInfo.getData().getRole();
@@ -114,7 +140,7 @@ public class ImGroupMemberServiceImpl implements ImGroupMemberService {
 
         List<AddMemberResp> resp = new ArrayList<>();
 
-        for (GroupMemberDto memberId : req.getMembers()) {
+        for (GroupMemberDto memberId : memberDtos) {
             ResponseVO addGroupMember = addGroupMember(req.getGroupId(), req.getAppId(), memberId);
 
             AddMemberResp addMemberResp = new AddMemberResp();
@@ -129,6 +155,16 @@ public class ImGroupMemberServiceImpl implements ImGroupMemberService {
             }
 
             resp.add(addMemberResp);
+        }
+
+        if (appConfig.isAddGroupMemberAfterCallback()) {
+            AddMemberAfterCallbackDto dto = new AddMemberAfterCallbackDto();
+            dto.setGroupId(req.getGroupId());
+            dto.setGroupType(groupInfo.getData().getGroupType());
+            dto.setMemberId(resp);
+            dto.setOperator(req.getOperator());
+            callbackService.callback(req.getAppId(), Constants.CallbackCommand.GroupMemberAddAfter,
+                    JSONObject.toJSONString(dto));
         }
 
         return ResponseVO.successResponse(resp);
@@ -248,8 +284,15 @@ public class ImGroupMemberServiceImpl implements ImGroupMemberService {
 
             }
         }
+        ResponseVO responseVO = removeGroupMember(req.getGroupId(), req.getAppId(), req.getMemberId());
+        if (responseVO.isOk()) {
+            if (appConfig.isDeleteGroupMemberAfterCallback()) {
+                callbackService.callback(req.getAppId(), Constants.CallbackCommand.GroupMemberDeleteAfter,
+                        JSONObject.toJSONString(req));
+            }
+        }
 
-        return removeGroupMember(req.getGroupId(), req.getAppId(), req.getMemberId());
+        return responseVO;
     }
 
     @Override

@@ -1,10 +1,13 @@
 package com.pius.im.service.group.service.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.pius.im.common.ResponseVO;
+import com.pius.im.common.config.AppConfig;
+import com.pius.im.common.constant.Constants;
 import com.pius.im.common.enums.GroupErrorCode;
 import com.pius.im.common.enums.GroupMemberRoleEnum;
 import com.pius.im.common.enums.GroupStatusEnum;
@@ -12,12 +15,14 @@ import com.pius.im.common.enums.GroupTypeEnum;
 import com.pius.im.common.exception.ApplicationException;
 import com.pius.im.service.group.dao.ImGroupEntity;
 import com.pius.im.service.group.dao.mapper.ImGroupMapper;
+import com.pius.im.service.group.model.callback.DestroyGroupCallbackDto;
 import com.pius.im.service.group.model.req.*;
 import com.pius.im.service.group.model.resp.GetGroupAndMemberResp;
 import com.pius.im.service.group.model.resp.GetJoinedGroupResp;
 import com.pius.im.service.group.model.resp.GetRoleInGroupResp;
 import com.pius.im.service.group.service.ImGroupMemberService;
 import com.pius.im.service.group.service.ImGroupService;
+import com.pius.im.service.utils.CallbackService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +49,12 @@ public class ImGroupServiceImpl implements ImGroupService {
     @Lazy
     @Autowired
     ImGroupMemberService imGroupMemberService;
+
+    @Autowired
+    AppConfig appConfig;
+
+    @Autowired
+    CallbackService callbackService;
 
     @Override
     @Transactional
@@ -147,6 +158,11 @@ public class ImGroupServiceImpl implements ImGroupService {
             imGroupMemberService.addGroupMember(req.getGroupId(), req.getAppId(), groupMember);
         }
 
+        if (appConfig.isCreateGroupAfterCallback()) {
+            callbackService.callback(req.getAppId(), Constants.CallbackCommand.CreateGroupAfter,
+                    JSONObject.toJSONString(group));
+        }
+
         return ResponseVO.successResponse();
     }
 
@@ -191,6 +207,13 @@ public class ImGroupServiceImpl implements ImGroupService {
         int update = imGroupMapper.update(entity, queryWrapper);
         if (update != 1) {
             throw new ApplicationException(GroupErrorCode.DESTROY_GROUP_FAILED);
+        }
+
+        if (appConfig.isDestroyGroupAfterCallback()) {
+            DestroyGroupCallbackDto dto = new DestroyGroupCallbackDto();
+            dto.setGroupId(req.getGroupId());
+            callbackService.callback(req.getAppId(), Constants.CallbackCommand.DestroyGroupAfter,
+                    JSONObject.toJSONString(dto));
         }
 
         return ResponseVO.successResponse();
@@ -240,6 +263,11 @@ public class ImGroupServiceImpl implements ImGroupService {
         int row = imGroupMapper.update(entity, queryWrapper);
         if (row != 1) {
             throw new ApplicationException(GroupErrorCode.UPDATE_GROUP_INFO_ERROR);
+        }
+
+        if (appConfig.isModifyGroupAfterCallback()) {
+            callbackService.callback(req.getAppId(), Constants.CallbackCommand.UpdateGroupAfter,
+                    JSONObject.toJSONString(imGroupMapper.selectOne(queryWrapper)));
         }
 
         return ResponseVO.successResponse();
