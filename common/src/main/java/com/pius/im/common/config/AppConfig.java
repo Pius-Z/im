@@ -25,4 +25,6 @@ public class AppConfig {
     /** 一致性hash的具体实现 */
     private Integer consistentHashImpl;
 
+    private String callbackUrl;
+
 }
