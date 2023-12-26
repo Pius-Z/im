@@ -11,6 +11,7 @@ import com.pius.im.common.model.ClientInfo;
 import com.pius.im.service.group.model.req.GroupMemberDto;
 import com.pius.im.service.group.service.ImGroupMemberService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -25,6 +26,7 @@ public class GroupMessageProducer {
     @Autowired
     MessageProducer messageProducer;
 
+    @Lazy
     @Autowired
     ImGroupMemberService imGroupMemberService;
 
