@@ -2,11 +2,13 @@ package com.pius.im.service.user.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.pius.im.codec.pack.user.UserModifyPack;
 import com.pius.im.common.ResponseVO;
 import com.pius.im.common.config.AppConfig;
 import com.pius.im.common.constant.Constants;
 import com.pius.im.common.enums.DelFlagEnum;
 import com.pius.im.common.enums.UserErrorCode;
+import com.pius.im.common.enums.command.UserEventCommand;
 import com.pius.im.common.exception.ApplicationException;
 import com.pius.im.service.user.dao.ImUserDataEntity;
 import com.pius.im.service.user.dao.mapper.ImUserDataMapper;
@@ -15,6 +17,7 @@ import com.pius.im.service.user.model.resp.GetUserInfoResp;
 import com.pius.im.service.user.model.resp.ImportOrDeleteUserResp;
 import com.pius.im.service.user.service.ImUserService;
 import com.pius.im.service.utils.CallbackService;
+import com.pius.im.service.utils.MessageProducer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +43,9 @@ public class ImUserServiceImpl implements ImUserService {
 
     @Autowired
     AppConfig appConfig;
+
+    @Autowired
+    MessageProducer messageProducer;
 
     @Override
     public ResponseVO<ImportOrDeleteUserResp> importUser(ImportUserReq req) {
@@ -179,6 +185,11 @@ public class ImUserServiceImpl implements ImUserService {
         imUserDataEntity.setUserId(null);
         int update = imUserDataMapper.update(imUserDataEntity, queryWrapper);
         if (update == 1) {
+            // 用户资料修改后的多端同步
+            UserModifyPack pack = new UserModifyPack();
+            BeanUtils.copyProperties(req, pack);
+            messageProducer.sendToUser(req.getUserId(), req.getClientType(), req.getImei(), UserEventCommand.USER_MODIFY, pack, req.getAppId());
+
             if (appConfig.isModifyUserAfterCallback()) {
                 callbackService.callback(req.getAppId(), Constants.CallbackCommand.ModifyUserAfter,
                         JSONObject.toJSONString(req));

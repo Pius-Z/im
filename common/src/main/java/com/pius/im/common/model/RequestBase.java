@@ -15,4 +15,8 @@ public class RequestBase {
 
     private String operator;
 
+    private Integer clientType;
+
+    private String imei;
+
 }
