@@ -17,6 +17,29 @@ spring:
           max-idle: 100
           min-idle: 10
           max-wait: 1000
+  rabbitmq:
+    host: 124.223.32.11
+    port: 5672
+    addresses: 124.223.32.11
+    userName: pius
+    password: 123456
+    virtual-host: /
+    listener:
+      simple:
+        concurrency: 5
+        max-concurrency: 10
+        acknowledge-mode: MANUAL
+        prefetch: 1
+    template:
+      mandatory: true
+    cache:
+      connection:
+        mode: channel
+      channel:
+        size: 36
+        checkout-timeout: 0
+    publisher-returns: true
+    publisher-confirm-type: correlated
 
 appConfig:
   zkAddr: 124.223.32.11:2181 # zk连接地址
