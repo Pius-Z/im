@@ -1,6 +1,10 @@
 package com.pius.im.tcp.receiver;
 
+import com.alibaba.fastjson.JSONObject;
+import com.pius.im.codec.proto.MessagePack;
 import com.pius.im.common.constant.Constants;
+import com.pius.im.tcp.receiver.process.BaseProcess;
+import com.pius.im.tcp.receiver.process.ProcessFactory;
 import com.pius.im.tcp.utils.MqFactory;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
@@ -32,9 +36,17 @@ public class MessageReceiver {
                     new DefaultConsumer(channel) {
                         @Override
                         public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
-                            String msgStr = new String(body);
-                            log.info(msgStr);
-                            channel.basicAck(envelope.getDeliveryTag(), false);
+                            try {
+                                String msgStr = new String(body);
+                                log.info(msgStr);
+                                MessagePack messagePack = JSONObject.parseObject(msgStr, MessagePack.class);
+                                BaseProcess messageProcess = ProcessFactory.getMessageProcess(messagePack.getCommand());
+                                messageProcess.process(messagePack);
+                                channel.basicAck(envelope.getDeliveryTag(), false);
+                            } catch (Exception e) {
+                                log.error(Arrays.toString(e.getStackTrace()));
+                                channel.basicNack(envelope.getDeliveryTag(), false, false);
+                            }
                         }
                     }
             );
