@@ -43,6 +43,9 @@ public enum FriendShipErrorCode implements ApplicationExceptionEnum {
     FRIEND_SHIP_GROUP_IS_EXIST(30014, "好友分组已存在"),
 
     FRIEND_SHIP_GROUP_IS_NOT_EXIST(30015, "好友分组不存在"),
+
+    FRIEND_DELETED_YOU(30016, "你已被好友删除"),
+
     ;
 
     private int code;

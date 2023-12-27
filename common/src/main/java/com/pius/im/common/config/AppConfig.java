@@ -21,6 +21,16 @@ public class AppConfig {
     /** zk连接超时时间*/
     private Integer zkConnectTimeOut;
 
+    /**
+     * 发送消息是否校验关系链
+     */
+    private boolean sendMessageCheckFriendship;
+
+    /**
+     * 发送消息是否校验黑名单
+     */
+    private boolean sendMessageCheckBlack;
+
     /** netty服务器路由策略 */
     private Integer imRouteStrategy;
 

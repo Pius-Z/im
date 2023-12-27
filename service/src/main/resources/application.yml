@@ -45,6 +45,8 @@ appConfig:
   privateKey: "123456"
   zkAddr: 124.223.32.11:2181 # zk连接地址
   zkConnectTimeOut: 10000 #zk超时时间
+  sendMessageCheckFriendship: true # 发送消息是否校验关系链
+  sendMessageCheckBlack: true # 发送消息是否校验黑名单
   imRouteStrategy: 3 # 路由策略 1.随机 2.轮询 3.一致性hash
   consistentHashImpl: 1 # 一致性hash的具体实现 1.TreeMap 2.自定义Map
   callbackUrl: http://127.0.0.1:8989/callback
