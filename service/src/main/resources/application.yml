@@ -42,6 +42,7 @@ spring:
     publisher-confirm-type: correlated
 
 appConfig:
+  privateKey: "123456"
   zkAddr: 124.223.32.11:2181 # zk连接地址
   zkConnectTimeOut: 10000 #zk超时时间
   imRouteStrategy: 3 # 路由策略 1.随机 2.轮询 3.一致性hash
