@@ -10,6 +10,7 @@ import com.pius.im.common.enums.ImConnectStatusEnum;
 import com.pius.im.common.enums.command.SystemCommand;
 import com.pius.im.common.model.UserClientDto;
 import com.pius.im.common.model.UserSession;
+import com.pius.im.tcp.publish.MessageProducer;
 import com.pius.im.tcp.redis.RedisManager;
 import com.pius.im.tcp.utils.SessionSocketHolder;
 import io.netty.channel.ChannelHandlerContext;
@@ -88,6 +89,8 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<Message> {
             SessionSocketHolder.removeUserSession((NioSocketChannel) channelHandlerContext.channel());
         } else if (command == SystemCommand.PING.getCommand()) {
             channelHandlerContext.channel().attr(AttributeKey.valueOf(Constants.ReadTime)).set(System.currentTimeMillis());
+        } else {
+            MessageProducer.sendMessage(message, command);
         }
 
     }
