@@ -70,7 +70,7 @@ public class CheckSendMessageService {
             toReq.setAppId(appId);
             toReq.setFromId(toId);
             toReq.setToId(fromId);
-            ResponseVO<ImFriendShipEntity> toRelation = imFriendService.getRelation(fromReq);
+            ResponseVO<ImFriendShipEntity> toRelation = imFriendService.getRelation(toReq);
             if (!toRelation.isOk()) {
                 return toRelation;
             }
