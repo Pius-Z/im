@@ -1,10 +1,11 @@
 package com.pius.im.service.config;
 
 import com.pius.im.common.config.AppConfig;
-import com.pius.im.common.enums.ImRouteStrategyEnum;
 import com.pius.im.common.enums.ConsistentHashImplEnum;
+import com.pius.im.common.enums.ImRouteStrategyEnum;
 import com.pius.im.common.route.RouteHandle;
 import com.pius.im.common.route.algorithm.consistenthash.AbstractConsistentHash;
+import com.pius.im.service.utils.SnowflakeIdWorker;
 import org.I0Itec.zkclient.ZkClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -49,6 +50,11 @@ public class BeanConfig {
     @Bean
     public EasySqlInjector easySqlInjector () {
         return new EasySqlInjector();
+    }
+
+    @Bean
+    public SnowflakeIdWorker buildSnowflakeSeq() {
+        return new SnowflakeIdWorker(0);
     }
 
 }
