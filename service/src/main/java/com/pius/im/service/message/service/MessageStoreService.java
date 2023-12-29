@@ -2,9 +2,12 @@ package com.pius.im.service.message.service;
 
 import com.pius.im.common.config.AppConfig;
 import com.pius.im.common.enums.DelFlagEnum;
+import com.pius.im.common.model.message.GroupChatMessageContent;
 import com.pius.im.common.model.message.MessageContent;
+import com.pius.im.service.message.dao.ImGroupMessageHistoryEntity;
 import com.pius.im.service.message.dao.ImMessageBodyEntity;
 import com.pius.im.service.message.dao.ImMessageHistoryEntity;
+import com.pius.im.service.message.dao.mapper.ImGroupMessageHistoryMapper;
 import com.pius.im.service.message.dao.mapper.ImMessageBodyMapper;
 import com.pius.im.service.message.dao.mapper.ImMessageHistoryMapper;
 import com.pius.im.service.utils.SnowflakeIdWorker;
@@ -27,6 +30,9 @@ public class MessageStoreService {
 
     @Autowired
     ImMessageBodyMapper imMessageBodyMapper;
+
+    @Autowired
+    ImGroupMessageHistoryMapper imGroupMessageHistoryMapper;
 
     @Autowired
     SnowflakeIdWorker snowflakeIdWorker;
@@ -87,6 +93,28 @@ public class MessageStoreService {
         list.add(toHistory);
 
         return list;
+    }
+
+    @Transactional
+    public void storeGroupMessage(GroupChatMessageContent messageContent) {
+        ImMessageBodyEntity imMessageBodyEntity = extractMessageBody(messageContent);
+        imMessageBodyMapper.insert((imMessageBodyEntity));
+
+        ImGroupMessageHistoryEntity imGroupMessageHistoryEntity = extractToGroupMessageHistory(messageContent, imMessageBodyEntity);
+        imGroupMessageHistoryMapper.insert(imGroupMessageHistoryEntity);
+
+        messageContent.setMessageKey(imMessageBodyEntity.getMessageKey());
+    }
+
+    private ImGroupMessageHistoryEntity extractToGroupMessageHistory(GroupChatMessageContent messageContent,
+                                                                     ImMessageBodyEntity messageBodyEntity) {
+        ImGroupMessageHistoryEntity imGroupMessageHistoryEntity = new ImGroupMessageHistoryEntity();
+        BeanUtils.copyProperties(messageContent, imGroupMessageHistoryEntity);
+        imGroupMessageHistoryEntity.setGroupId(messageContent.getGroupId());
+        imGroupMessageHistoryEntity.setMessageKey(messageBodyEntity.getMessageKey());
+        imGroupMessageHistoryEntity.setCreateTime(System.currentTimeMillis());
+
+        return imGroupMessageHistoryEntity;
     }
 
 }

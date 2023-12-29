@@ -29,6 +29,9 @@ public class GroupMessageService {
     @Autowired
     ImGroupMemberService imGroupMemberService;
 
+    @Autowired
+    MessageStoreService messageStoreService;
+
     public void process(GroupChatMessageContent groupChatMessageContent) {
 
         String fromId = groupChatMessageContent.getFromId();
@@ -42,6 +45,9 @@ public class GroupMessageService {
             List<String> groupMemberId = imGroupMemberService.getGroupMemberId(groupChatMessageContent.getGroupId(),
                     groupChatMessageContent.getAppId());
             groupChatMessageContent.setMemberId(groupMemberId);
+
+            // 消息存储
+            messageStoreService.storeGroupMessage(groupChatMessageContent);
 
             // 1.回ack成功给自己
             ack(groupChatMessageContent, responseVO);
