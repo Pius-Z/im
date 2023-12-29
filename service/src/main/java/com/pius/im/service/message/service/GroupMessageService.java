@@ -7,7 +7,11 @@ import com.pius.im.common.model.ClientInfo;
 import com.pius.im.common.model.message.GroupChatMessageContent;
 import com.pius.im.common.model.message.MessageContent;
 import com.pius.im.service.group.service.ImGroupMemberService;
+import com.pius.im.service.message.model.req.SendGroupMessageReq;
+import com.pius.im.service.message.model.resp.SendMessageResp;
 import com.pius.im.service.utils.MessageProducer;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +21,7 @@ import java.util.List;
  * @Author: Pius
  * @Date: 2023/12/28
  */
+@Slf4j
 @Service
 public class GroupMessageService {
 
@@ -42,9 +47,6 @@ public class GroupMessageService {
         ResponseVO responseVO = imServerPermissionCheck(fromId, groupId, appId);
 
         if (responseVO.isOk()) {
-            List<String> groupMemberId = imGroupMemberService.getGroupMemberId(groupChatMessageContent.getGroupId(),
-                    groupChatMessageContent.getAppId());
-            groupChatMessageContent.setMemberId(groupMemberId);
 
             // 消息存储
             messageStoreService.storeGroupMessage(groupChatMessageContent);
@@ -79,10 +81,45 @@ public class GroupMessageService {
     }
 
     private void dispatchMessage(GroupChatMessageContent groupChatMessageContent) {
+
+        List<String> groupMemberId = imGroupMemberService.getGroupMemberId(groupChatMessageContent.getGroupId(),
+                groupChatMessageContent.getAppId());
+        groupChatMessageContent.setMemberId(groupMemberId);
+
         for (String memberId : groupChatMessageContent.getMemberId()) {
             if (!memberId.equals(groupChatMessageContent.getFromId())) {
                 messageProducer.sendToUser(memberId, GroupEventCommand.MSG_GROUP, groupChatMessageContent, groupChatMessageContent.getAppId());
             }
         }
     }
+
+    public ResponseVO<SendMessageResp> send(SendGroupMessageReq sendGroupMessageReq) {
+
+        GroupChatMessageContent groupChatMessageContent = new GroupChatMessageContent();
+        BeanUtils.copyProperties(sendGroupMessageReq, groupChatMessageContent);
+
+        // 前置校验
+        ResponseVO responseVO = imServerPermissionCheck(groupChatMessageContent.getFromId(), groupChatMessageContent.getGroupId(),
+                groupChatMessageContent.getAppId());
+
+        if (!responseVO.isOk()) {
+            return ResponseVO.errorResponse(responseVO.getCode(), responseVO.getMsg());
+        }
+
+        // 保存消息
+        messageStoreService.storeGroupMessage(groupChatMessageContent);
+
+        SendMessageResp sendMessageResp = new SendMessageResp();
+        sendMessageResp.setMessageKey(groupChatMessageContent.getMessageKey());
+        sendMessageResp.setMessageTime(System.currentTimeMillis());
+
+        // 发消息给同步在线端
+        syncToSender(groupChatMessageContent, groupChatMessageContent);
+
+        // 发消息给对方在线端
+        dispatchMessage(groupChatMessageContent);
+
+        return ResponseVO.successResponse(sendMessageResp);
+    }
+
 }

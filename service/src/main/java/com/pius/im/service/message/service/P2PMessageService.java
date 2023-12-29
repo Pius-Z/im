@@ -5,8 +5,11 @@ import com.pius.im.common.ResponseVO;
 import com.pius.im.common.enums.command.MessageCommand;
 import com.pius.im.common.model.ClientInfo;
 import com.pius.im.common.model.message.MessageContent;
+import com.pius.im.service.message.model.req.SendMessageReq;
+import com.pius.im.service.message.model.resp.SendMessageResp;
 import com.pius.im.service.utils.MessageProducer;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -74,6 +77,35 @@ public class P2PMessageService {
 
     private void dispatchMessage(MessageContent messageContent) {
         messageProducer.sendToUser(messageContent.getToId(), MessageCommand.MSG_P2P, messageContent, messageContent.getAppId());
+    }
+
+    public ResponseVO<SendMessageResp> send(SendMessageReq sendMessageReq) {
+
+        MessageContent messageContent = new MessageContent();
+        BeanUtils.copyProperties(sendMessageReq, messageContent);
+
+        // 前置校验
+        ResponseVO responseVO = imServerPermissionCheck(messageContent.getFromId(), messageContent.getToId(),
+                messageContent.getAppId());
+
+        if (!responseVO.isOk()) {
+            return ResponseVO.errorResponse(responseVO.getCode(), responseVO.getMsg());
+        }
+
+        // 保存消息
+        messageStoreService.storeP2PMessage(messageContent);
+
+        SendMessageResp sendMessageResp = new SendMessageResp();
+        sendMessageResp.setMessageKey(messageContent.getMessageKey());
+        sendMessageResp.setMessageTime(System.currentTimeMillis());
+
+        // 发消息给同步在线端
+        syncToSender(messageContent, messageContent);
+
+        // 发消息给对方在线端
+        dispatchMessage(messageContent);
+
+        return ResponseVO.successResponse(sendMessageResp);
     }
 
 }
