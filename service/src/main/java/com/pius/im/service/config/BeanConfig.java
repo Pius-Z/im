@@ -46,4 +46,9 @@ public class BeanConfig {
         return routeHandle;
     }
 
+    @Bean
+    public EasySqlInjector easySqlInjector () {
+        return new EasySqlInjector();
+    }
+
 }
