@@ -24,6 +24,9 @@ public class P2PMessageService {
     @Autowired
     MessageProducer messageProducer;
 
+    @Autowired
+    MessageStoreService messageStoreService;
+
     public void process(MessageContent messageContent) {
 
         Integer appId = messageContent.getAppId();
@@ -31,6 +34,9 @@ public class P2PMessageService {
         String toId = messageContent.getToId();
         ResponseVO responseVO = imServerPermissionCheck(fromId, toId, appId);
         if (responseVO.isOk()) {
+
+            messageStoreService.storeP2PMessage(messageContent);
+
             // 1.返回给发送端ack
             ack(messageContent, ResponseVO.successResponse());
             // 2.发消息给同步在线端
