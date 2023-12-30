@@ -16,6 +16,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @Author: Pius
@@ -37,6 +41,19 @@ public class GroupMessageService {
     @Autowired
     MessageStoreService messageStoreService;
 
+    private final ThreadPoolExecutor threadPoolExecutor;
+
+    {
+        final AtomicInteger num = new AtomicInteger(0);
+        threadPoolExecutor = new ThreadPoolExecutor(8, 8, 60, TimeUnit.SECONDS,
+                new LinkedBlockingDeque<>(1000), r -> {
+            Thread thread = new Thread(r);
+            thread.setDaemon(true);
+            thread.setName("message-process-thread-" + num.getAndIncrement());
+            return thread;
+        });
+    }
+
     public void process(GroupChatMessageContent groupChatMessageContent) {
 
         String fromId = groupChatMessageContent.getFromId();
@@ -47,16 +64,17 @@ public class GroupMessageService {
         ResponseVO responseVO = imServerPermissionCheck(fromId, groupId, appId);
 
         if (responseVO.isOk()) {
+            threadPoolExecutor.execute(() -> {
+                // 消息存储
+                messageStoreService.storeGroupMessage(groupChatMessageContent);
 
-            // 消息存储
-            messageStoreService.storeGroupMessage(groupChatMessageContent);
-
-            // 1.回ack成功给自己
-            ack(groupChatMessageContent, responseVO);
-            // 2.发消息给同步在线端
-            syncToSender(groupChatMessageContent, groupChatMessageContent);
-            // 3.发消息给对方在线端
-            dispatchMessage(groupChatMessageContent);
+                // 1.回ack成功给自己
+                ack(groupChatMessageContent, ResponseVO.successResponse());
+                // 2.发消息给同步在线端
+                syncToSender(groupChatMessageContent, groupChatMessageContent);
+                // 3.发消息给对方在线端
+                dispatchMessage(groupChatMessageContent);
+            });
         } else {
             // 通知发送端发送失败
             ack(groupChatMessageContent, responseVO);
