@@ -73,6 +73,18 @@
             <version>0.1</version>
         </dependency>
 
+        <!-- feign调用依赖 -->
+        <dependency>
+            <groupId>io.github.openfeign</groupId>
+            <artifactId>feign-core</artifactId>
+            <version>13.1</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.openfeign</groupId>
+            <artifactId>feign-jackson</artifactId>
+            <version>13.1</version>
+        </dependency>
+
     </dependencies>
 
 </project>

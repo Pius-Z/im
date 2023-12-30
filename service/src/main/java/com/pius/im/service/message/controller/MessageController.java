@@ -1,8 +1,11 @@
 package com.pius.im.service.message.controller;
 
 import com.pius.im.common.ResponseVO;
+import com.pius.im.common.enums.command.MessageCommand;
+import com.pius.im.common.model.message.CheckSendMessageReq;
 import com.pius.im.service.message.model.req.SendMessageReq;
 import com.pius.im.service.message.model.resp.SendMessageResp;
+import com.pius.im.service.message.service.GroupMessageService;
 import com.pius.im.service.message.service.P2PMessageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
@@ -21,9 +24,21 @@ public class MessageController {
     @Autowired
     P2PMessageService p2PMessageService;
 
+    @Autowired
+    GroupMessageService groupMessageService;
+
     @RequestMapping("/send")
     public ResponseVO<SendMessageResp> send(@RequestBody @Validated SendMessageReq req) {
         return p2PMessageService.send(req);
+    }
+
+    @RequestMapping("/checkSend")
+    public ResponseVO checkSend(@RequestBody @Validated CheckSendMessageReq req) {
+        if (req.getCommand() == MessageCommand.MSG_P2P.getCommand()) {
+            return p2PMessageService.imServerPermissionCheck(req.getFromId(), req.getToId(), req.getAppId());
+        } else {
+            return groupMessageService.imServerPermissionCheck(req.getFromId(), req.getToId(), req.getAppId());
+        }
     }
 
 }

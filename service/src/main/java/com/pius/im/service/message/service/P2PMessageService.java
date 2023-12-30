@@ -50,26 +50,16 @@ public class P2PMessageService {
 
     public void process(MessageContent messageContent) {
 
-        Integer appId = messageContent.getAppId();
-        String fromId = messageContent.getFromId();
-        String toId = messageContent.getToId();
-        ResponseVO responseVO = imServerPermissionCheck(fromId, toId, appId);
-        if (responseVO.isOk()) {
-            threadPoolExecutor.execute(() -> {
-                messageStoreService.storeP2PMessage(messageContent);
+        threadPoolExecutor.execute(() -> {
+            messageStoreService.storeP2PMessage(messageContent);
 
-                // 1.返回给发送端ack
-                ack(messageContent, ResponseVO.successResponse());
-                // 2.发消息给同步在线端
-                syncToSender(messageContent, messageContent);
-                // 3.发消息给对方在线端
-                dispatchMessage(messageContent);
-            });
-        } else {
-            // 通知发送端发送失败
-            ack(messageContent, responseVO);
-        }
-
+            // 1.返回给发送端ack
+            ack(messageContent, ResponseVO.successResponse());
+            // 2.发消息给同步在线端
+            syncToSender(messageContent, messageContent);
+            // 3.发消息给对方在线端
+            dispatchMessage(messageContent);
+        });
     }
 
     public ResponseVO imServerPermissionCheck(String fromId, String toId, Integer appId) {

@@ -56,32 +56,20 @@ public class GroupMessageService {
 
     public void process(GroupChatMessageContent groupChatMessageContent) {
 
-        String fromId = groupChatMessageContent.getFromId();
-        String groupId = groupChatMessageContent.getGroupId();
-        Integer appId = groupChatMessageContent.getAppId();
+        threadPoolExecutor.execute(() -> {
+            // 消息存储
+            messageStoreService.storeGroupMessage(groupChatMessageContent);
 
-        // 前置校验
-        ResponseVO responseVO = imServerPermissionCheck(fromId, groupId, appId);
-
-        if (responseVO.isOk()) {
-            threadPoolExecutor.execute(() -> {
-                // 消息存储
-                messageStoreService.storeGroupMessage(groupChatMessageContent);
-
-                // 1.回ack成功给自己
-                ack(groupChatMessageContent, ResponseVO.successResponse());
-                // 2.发消息给同步在线端
-                syncToSender(groupChatMessageContent, groupChatMessageContent);
-                // 3.发消息给对方在线端
-                dispatchMessage(groupChatMessageContent);
-            });
-        } else {
-            // 通知发送端发送失败
-            ack(groupChatMessageContent, responseVO);
-        }
+            // 1.回ack成功给自己
+            ack(groupChatMessageContent, ResponseVO.successResponse());
+            // 2.发消息给同步在线端
+            syncToSender(groupChatMessageContent, groupChatMessageContent);
+            // 3.发消息给对方在线端
+            dispatchMessage(groupChatMessageContent);
+        });
     }
 
-    private ResponseVO imServerPermissionCheck(String fromId, String groupId, Integer appId) {
+    public ResponseVO imServerPermissionCheck(String fromId, String groupId, Integer appId) {
         return checkSendMessageService.checkGroupMessage(fromId, groupId, appId);
     }
 
