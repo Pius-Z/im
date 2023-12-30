@@ -1,4 +1,4 @@
-package com.pius.im.service.message.dao;
+package com.pius.message.dao;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;

@@ -1,15 +1,13 @@
-package com.pius.im.service.message.dao;
+package com.pius.im.common.model.message;
 
-import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 /**
  * @Author: Pius
- * @Date: 2023/12/29
+ * @Date: 2023/12/30
  */
 @Data
-@TableName("im_message_body")
-public class ImMessageBodyEntity {
+public class ImMessageBody {
 
     private Integer appId;
 

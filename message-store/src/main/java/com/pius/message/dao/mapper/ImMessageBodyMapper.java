@@ -1,7 +1,7 @@
-package com.pius.im.service.message.dao.mapper;
+package com.pius.message.dao.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.pius.im.service.message.dao.ImMessageBodyEntity;
+import com.pius.message.dao.ImMessageBodyEntity;
 
 /**
  * @Author: Pius
