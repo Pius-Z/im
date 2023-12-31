@@ -153,4 +153,16 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<Message> {
         }
 
     }
+
+    /**
+     *  channel 处于不活动状态
+     *  即用户离线，删除本地session并更新redis
+     */
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) {
+        //设置离线
+        SessionSocketHolder.offlineUserSession((NioSocketChannel) ctx.channel());
+        ctx.close();
+    }
+
 }
