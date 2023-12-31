@@ -6,26 +6,18 @@ import lombok.EqualsAndHashCode;
 
 /**
  * @Author: Pius
- * @Date: 2023/12/27
+ * @Date: 2023/12/31
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class MessageContent extends ClientInfo {
+public class MessageReceiveAckContent extends ClientInfo {
 
-    private String messageId;
+    private Long messageKey;
 
     private String fromId;
 
     private String toId;
 
-    private String messageBody;
-
-    private Long messageKey;
-
-    private Long messageTime;
-
-    private long messageSequence;
-
-    private String extra;
+    private Long messageSequence;
 
 }
