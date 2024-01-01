@@ -2,6 +2,7 @@ package com.pius.im.service.message.service;
 
 import com.pius.im.codec.pack.message.ChatMessageAck;
 import com.pius.im.common.ResponseVO;
+import com.pius.im.common.constant.Constants;
 import com.pius.im.common.enums.command.GroupEventCommand;
 import com.pius.im.common.model.ClientInfo;
 import com.pius.im.common.model.message.GroupChatMessageContent;
@@ -9,6 +10,7 @@ import com.pius.im.common.model.message.MessageContent;
 import com.pius.im.service.group.service.ImGroupMemberService;
 import com.pius.im.service.message.model.req.SendGroupMessageReq;
 import com.pius.im.service.message.model.resp.SendMessageResp;
+import com.pius.im.service.seq.RedisSeq;
 import com.pius.im.service.utils.MessageProducer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -41,6 +43,9 @@ public class GroupMessageService {
     @Autowired
     MessageStoreService messageStoreService;
 
+    @Autowired
+    RedisSeq redisSeq;
+
     private final ThreadPoolExecutor threadPoolExecutor;
 
     {
@@ -57,6 +62,10 @@ public class GroupMessageService {
     public void process(GroupChatMessageContent groupChatMessageContent) {
 
         threadPoolExecutor.execute(() -> {
+
+            long seq = redisSeq.doGetSeq(groupChatMessageContent.getAppId() + ":" + Constants.SeqConstants.GroupMessage
+                    + groupChatMessageContent.getGroupId());
+            groupChatMessageContent.setMessageSequence(seq);
             // 消息存储
             messageStoreService.storeGroupMessage(groupChatMessageContent);
 
@@ -75,7 +84,7 @@ public class GroupMessageService {
 
     private void ack(MessageContent messageContent, ResponseVO responseVO) {
 
-        ChatMessageAck chatMessageAck = new ChatMessageAck(messageContent.getMessageId());
+        ChatMessageAck chatMessageAck = new ChatMessageAck(messageContent.getMessageId(), messageContent.getMessageSequence());
         ResponseVO<ChatMessageAck> resp = new ResponseVO<>(responseVO.getCode(), responseVO.getMsg(), chatMessageAck);
 
         messageProducer.sendToUser(messageContent.getFromId(), GroupEventCommand.GROUP_MSG_ACK, resp, messageContent);

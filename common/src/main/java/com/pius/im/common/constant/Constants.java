@@ -101,4 +101,13 @@ public class Constants {
         public static final String DeleteBlack = "black.delete";
 
     }
+
+    public static class SeqConstants {
+
+        public static final String Message = "messageSeq";
+
+        public static final String GroupMessage = "groupMessageSeq";
+
+    }
+
 }

@@ -3,11 +3,14 @@ package com.pius.im.service.message.service;
 import com.pius.im.codec.pack.message.ChatMessageAck;
 import com.pius.im.codec.pack.message.MessageReceiveServerAck;
 import com.pius.im.common.ResponseVO;
+import com.pius.im.common.constant.Constants;
 import com.pius.im.common.enums.command.MessageCommand;
 import com.pius.im.common.model.ClientInfo;
 import com.pius.im.common.model.message.MessageContent;
 import com.pius.im.service.message.model.req.SendMessageReq;
 import com.pius.im.service.message.model.resp.SendMessageResp;
+import com.pius.im.service.seq.RedisSeq;
+import com.pius.im.service.utils.ConversationIdGenerate;
 import com.pius.im.service.utils.MessageProducer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -37,6 +40,9 @@ public class P2PMessageService {
     @Autowired
     MessageStoreService messageStoreService;
 
+    @Autowired
+    RedisSeq redisSeq;
+
     private final ThreadPoolExecutor threadPoolExecutor;
 
     {
@@ -53,6 +59,11 @@ public class P2PMessageService {
     public void process(MessageContent messageContent) {
 
         threadPoolExecutor.execute(() -> {
+
+            long seq = redisSeq.doGetSeq(messageContent.getAppId() + ":" + Constants.SeqConstants.Message
+                    + ":" + ConversationIdGenerate.generateP2PId(messageContent.getFromId(), messageContent.getToId()));
+            messageContent.setMessageSequence(seq);
+
             messageStoreService.storeP2PMessage(messageContent);
 
             // 1.返回给发送端ack
@@ -80,7 +91,7 @@ public class P2PMessageService {
     private void ack(MessageContent messageContent, ResponseVO responseVO) {
         log.info("msg ack,msgId={},checkResult{}", messageContent.getMessageId(), responseVO.getCode());
 
-        ChatMessageAck chatMessageAck = new ChatMessageAck(messageContent.getMessageId());
+        ChatMessageAck chatMessageAck = new ChatMessageAck(messageContent.getMessageId(), messageContent.getMessageSequence());
         ResponseVO<ChatMessageAck> resp = new ResponseVO<>(responseVO.getCode(), responseVO.getMsg(), chatMessageAck);
 
         messageProducer.sendToUser(messageContent.getFromId(), MessageCommand.MSG_ACK, resp, messageContent);

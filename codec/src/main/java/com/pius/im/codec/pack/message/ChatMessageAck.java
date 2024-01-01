@@ -13,4 +13,10 @@ public class ChatMessageAck {
 
     private String messageId;
 
+    private Long messageSequence;
+
+    public ChatMessageAck(String messageId) {
+        this.messageId = messageId;
+    }
+
 }
