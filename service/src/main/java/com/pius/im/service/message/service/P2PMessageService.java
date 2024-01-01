@@ -58,6 +58,25 @@ public class P2PMessageService {
 
     public void process(MessageContent messageContent) {
 
+        // 从缓存中获取消息
+        MessageContent messageFromMessageIdCache = messageStoreService.getMessageFromMessageIdCache(
+                messageContent.getAppId(), messageContent.getMessageId(), messageContent.getClass());
+        if (messageFromMessageIdCache != null) {
+            threadPoolExecutor.execute(() -> {
+                // 1.返回给发送端ack
+                ack(messageFromMessageIdCache, ResponseVO.successResponse());
+                // 2.发消息给同步在线端
+                syncToSender(messageFromMessageIdCache, messageFromMessageIdCache);
+                // 3.发消息给对方在线端
+                List<ClientInfo> clientInfos = dispatchMessage(messageFromMessageIdCache);
+                if (clientInfos.isEmpty()) {
+                    // 发送接收确认给发送方，要带上是服务端发送的标识
+                    receiveAck(messageFromMessageIdCache);
+                }
+            });
+            return;
+        }
+
         threadPoolExecutor.execute(() -> {
 
             long seq = redisSeq.doGetSeq(messageContent.getAppId() + ":" + Constants.SeqConstants.Message
@@ -76,6 +95,10 @@ public class P2PMessageService {
                 // 发送接收确认给发送方，要带上是服务端发送的标识
                 receiveAck(messageContent);
             }
+
+            // 将message存到缓存中
+            messageStoreService.setMessageFromMessageIdCache(messageContent.getAppId(),
+                    messageContent.getMessageId(), messageContent);
         });
     }
 

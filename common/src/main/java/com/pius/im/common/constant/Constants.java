@@ -44,6 +44,12 @@ public class Constants {
          * 用户上线通知channel
          */
         public static final String UserLoginChannel = "signal/channel/LOGIN_USER_INNER_QUEUE";
+
+        /**
+         * 缓存客户端消息防重，格式： appId + :cacheMessage: + messageId
+         */
+        public static final String cacheMessage = "cacheMessage";
+
     }
 
     public static class RabbitMQConstants {

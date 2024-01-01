@@ -61,6 +61,20 @@ public class GroupMessageService {
 
     public void process(GroupChatMessageContent groupChatMessageContent) {
 
+        // 从缓存中获取消息
+        GroupChatMessageContent messageFromMessageIdCache = messageStoreService.getMessageFromMessageIdCache(groupChatMessageContent.getAppId(),
+                groupChatMessageContent.getMessageId(), GroupChatMessageContent.class);
+        if (messageFromMessageIdCache != null) {
+            threadPoolExecutor.execute(() -> {
+                // 1.回ack成功给自己
+                ack(messageFromMessageIdCache, ResponseVO.successResponse());
+                // 2.发消息给同步在线端
+                syncToSender(messageFromMessageIdCache, messageFromMessageIdCache);
+                // 3.发消息给对方在线端
+                dispatchMessage(messageFromMessageIdCache);
+            });
+        }
+
         threadPoolExecutor.execute(() -> {
 
             long seq = redisSeq.doGetSeq(groupChatMessageContent.getAppId() + ":" + Constants.SeqConstants.GroupMessage
@@ -75,6 +89,10 @@ public class GroupMessageService {
             syncToSender(groupChatMessageContent, groupChatMessageContent);
             // 3.发消息给对方在线端
             dispatchMessage(groupChatMessageContent);
+
+            // 将message存到缓存中
+            messageStoreService.setMessageFromMessageIdCache(groupChatMessageContent.getAppId(),
+                    groupChatMessageContent.getMessageId(), groupChatMessageContent);
         });
     }
 
