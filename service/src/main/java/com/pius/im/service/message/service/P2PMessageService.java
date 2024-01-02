@@ -4,9 +4,11 @@ import com.pius.im.codec.pack.message.ChatMessageAck;
 import com.pius.im.codec.pack.message.MessageReceiveServerAck;
 import com.pius.im.common.ResponseVO;
 import com.pius.im.common.constant.Constants;
+import com.pius.im.common.enums.ConversationTypeEnum;
 import com.pius.im.common.enums.command.MessageCommand;
 import com.pius.im.common.model.ClientInfo;
 import com.pius.im.common.model.message.MessageContent;
+import com.pius.im.common.model.message.OfflineMessageContent;
 import com.pius.im.service.message.model.req.SendMessageReq;
 import com.pius.im.service.message.model.resp.SendMessageResp;
 import com.pius.im.service.seq.RedisSeq;
@@ -84,6 +86,11 @@ public class P2PMessageService {
             messageContent.setMessageSequence(seq);
 
             messageStoreService.storeP2PMessage(messageContent);
+
+            OfflineMessageContent offlineMessageContent = new OfflineMessageContent();
+            BeanUtils.copyProperties(messageContent, offlineMessageContent);
+            offlineMessageContent.setConversationType(ConversationTypeEnum.P2P.getCode());
+            messageStoreService.storeOfflineMessage(offlineMessageContent);
 
             // 1.返回给发送端ack
             ack(messageContent, ResponseVO.successResponse());

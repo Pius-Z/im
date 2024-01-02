@@ -3,15 +3,19 @@ package com.pius.im.service.message.service;
 import com.alibaba.fastjson.JSONObject;
 import com.pius.im.common.config.AppConfig;
 import com.pius.im.common.constant.Constants;
+import com.pius.im.common.enums.ConversationTypeEnum;
 import com.pius.im.common.enums.DelFlagEnum;
 import com.pius.im.common.model.message.*;
+import com.pius.im.service.conversion.service.ConversationService;
 import com.pius.im.service.utils.SnowflakeIdWorker;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -32,6 +36,9 @@ public class MessageStoreService {
 
     @Autowired
     StringRedisTemplate stringRedisTemplate;
+
+    @Autowired
+    ConversationService conversationService;
 
     public void storeP2PMessage(MessageContent messageContent) {
         ImMessageBody imMessageBody = extractMessageBody(messageContent);
@@ -82,6 +89,48 @@ public class MessageStoreService {
             return null;
         }
         return JSONObject.parseObject(msg, clazz);
+    }
+
+    public void storeOfflineMessage(OfflineMessageContent offlineMessage) {
+        ZSetOperations<String, String> operations = stringRedisTemplate.opsForZSet();
+
+        // 生成发送者的的离线消息集合键
+        String fromKey = offlineMessage.getAppId() + ":" + Constants.RedisConstants.OfflineMessage + ":" + offlineMessage.getFromId();
+        // 判断离线消息数量是否超过设定值
+        if (operations.zCard(fromKey) > appConfig.getOfflineMessageCount()) {
+            operations.removeRange(fromKey, 0, 0);
+        }
+        offlineMessage.setConversationId(conversationService.convertConversationId(ConversationTypeEnum.P2P.getCode(),
+                offlineMessage.getFromId(), offlineMessage.getToId()));
+        // 插入数据 以messageKey作为分值
+        operations.add(fromKey, JSONObject.toJSONString(offlineMessage), offlineMessage.getMessageKey());
+
+        // 生成接收者的的离线消息集合键
+        String toKey = offlineMessage.getAppId() + ":" + Constants.RedisConstants.OfflineMessage + ":" + offlineMessage.getToId();
+        // 判断离线消息数量是否超过设定值
+        if (operations.zCard(toKey) > appConfig.getOfflineMessageCount()) {
+            operations.removeRange(toKey, 0, 0);
+        }
+        offlineMessage.setConversationId(conversationService.convertConversationId(ConversationTypeEnum.P2P.getCode(),
+                offlineMessage.getToId(), offlineMessage.getFromId()));
+        // 插入数据 以messageKey作为分值
+        operations.add(toKey, JSONObject.toJSONString(offlineMessage), offlineMessage.getMessageKey());
+    }
+
+    public void storeGroupOfflineMessage(OfflineMessageContent offlineMessage, List<String> memberIds) {
+        ZSetOperations<String, String> operations = stringRedisTemplate.opsForZSet();
+        for (String memberId : memberIds) {
+            // 生成接收者的的离线消息集合键
+            String toKey = offlineMessage.getAppId() + ":" + Constants.RedisConstants.OfflineMessage + ":" + memberId;
+            // 判断离线消息数量是否超过设定值
+            if (operations.zCard(toKey) > appConfig.getOfflineMessageCount()) {
+                operations.removeRange(toKey, 0, 0);
+            }
+            offlineMessage.setConversationId(conversationService.convertConversationId(ConversationTypeEnum.GROUP.getCode(),
+                    memberId, offlineMessage.getToId()));
+            // 插入数据 以messageKey作为分值
+            operations.add(toKey, JSONObject.toJSONString(offlineMessage), offlineMessage.getMessageKey());
+        }
     }
 
 }

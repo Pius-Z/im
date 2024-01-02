@@ -50,6 +50,11 @@ public class Constants {
          */
         public static final String cacheMessage = "cacheMessage";
 
+        /**
+         * 离线消息 appId + :offlineMessage: + userId
+         */
+        public static final String OfflineMessage = "offlineMessage";
+
     }
 
     public static class RabbitMQConstants {

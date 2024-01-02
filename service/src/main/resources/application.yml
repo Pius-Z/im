@@ -64,6 +64,7 @@ appConfig:
   addGroupMemberAfterCallback: false # 拉人入群之后回调
   addGroupMemberBeforeCallback: false # 拉人入群之前回调
   deleteConversationSyncMode: true # 多端同步
+  offlineMessageCount: 1000 # 离线消息存储条数
 
 # logger 配置
 logging:

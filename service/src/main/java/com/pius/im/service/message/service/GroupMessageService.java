@@ -3,10 +3,12 @@ package com.pius.im.service.message.service;
 import com.pius.im.codec.pack.message.ChatMessageAck;
 import com.pius.im.common.ResponseVO;
 import com.pius.im.common.constant.Constants;
+import com.pius.im.common.enums.ConversationTypeEnum;
 import com.pius.im.common.enums.command.GroupEventCommand;
 import com.pius.im.common.model.ClientInfo;
 import com.pius.im.common.model.message.GroupChatMessageContent;
 import com.pius.im.common.model.message.MessageContent;
+import com.pius.im.common.model.message.OfflineMessageContent;
 import com.pius.im.service.group.service.ImGroupMemberService;
 import com.pius.im.service.message.model.req.SendGroupMessageReq;
 import com.pius.im.service.message.model.resp.SendMessageResp;
@@ -83,6 +85,15 @@ public class GroupMessageService {
             // 消息存储
             messageStoreService.storeGroupMessage(groupChatMessageContent);
 
+            List<String> groupMemberId = imGroupMemberService.getGroupMemberId(groupChatMessageContent.getGroupId(),
+                    groupChatMessageContent.getAppId());
+            groupChatMessageContent.setMemberId(groupMemberId);
+            OfflineMessageContent offlineMessageContent = new OfflineMessageContent();
+            BeanUtils.copyProperties(groupChatMessageContent, offlineMessageContent);
+            offlineMessageContent.setToId(groupChatMessageContent.getGroupId());
+            offlineMessageContent.setConversationType(ConversationTypeEnum.GROUP.getCode());
+            messageStoreService.storeGroupOfflineMessage(offlineMessageContent, groupMemberId);
+
             // 1.回ack成功给自己
             ack(groupChatMessageContent, ResponseVO.successResponse());
             // 2.发消息给同步在线端
@@ -114,11 +125,6 @@ public class GroupMessageService {
     }
 
     private void dispatchMessage(GroupChatMessageContent groupChatMessageContent) {
-
-        List<String> groupMemberId = imGroupMemberService.getGroupMemberId(groupChatMessageContent.getGroupId(),
-                groupChatMessageContent.getAppId());
-        groupChatMessageContent.setMemberId(groupMemberId);
-
         for (String memberId : groupChatMessageContent.getMemberId()) {
             if (!memberId.equals(groupChatMessageContent.getFromId())) {
                 messageProducer.sendToUser(memberId, GroupEventCommand.MSG_GROUP, groupChatMessageContent, groupChatMessageContent.getAppId());
