@@ -5,7 +5,9 @@ import com.alibaba.fastjson.JSONObject;
 import com.pius.im.common.constant.Constants;
 import com.pius.im.common.enums.command.GroupEventCommand;
 import com.pius.im.common.model.message.GroupChatMessageContent;
+import com.pius.im.common.model.message.MessageReadContent;
 import com.pius.im.service.message.service.GroupMessageService;
+import com.pius.im.service.message.service.MessageSyncService;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
@@ -33,6 +35,9 @@ public class GroupChatOperateReceiver {
     @Autowired
     GroupMessageService groupMessageService;
 
+    @Autowired
+    MessageSyncService messageSyncService;
+
     @RabbitListener(
             bindings = @QueueBinding(
                     value = @Queue(value = Constants.RabbitMQConstants.Im2GroupService, durable = "true"),
@@ -53,6 +58,10 @@ public class GroupChatOperateReceiver {
                 GroupChatMessageContent messageContent
                         = jsonObject.toJavaObject(GroupChatMessageContent.class);
                 groupMessageService.process(messageContent);
+            } else if (command.equals(GroupEventCommand.MSG_GROUP_READ.getCommand())) {
+                // 消息已读
+                MessageReadContent messageReadContent = jsonObject.toJavaObject(MessageReadContent.class);
+                messageSyncService.groupReadMark(messageReadContent);
             }
             channel.basicAck(deliveryTag, false);
         } catch (Exception e) {

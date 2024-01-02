@@ -77,7 +77,7 @@ public enum GroupEventCommand implements Command {
     /**
      * 消息已读通知给同步端 2053
      */
-    MSG_GROUP_READ_NOTIFY(0x805),
+    MSG_GROUP_READ_SYNC(0x805),
 
     /**
      * 消息已读回执，给原消息发送方 2054
