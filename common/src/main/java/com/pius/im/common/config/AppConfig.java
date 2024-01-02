@@ -104,4 +104,9 @@ public class AppConfig {
      */
     private boolean addGroupMemberAfterCallback;
 
+    /**
+     * 删除会话后多端同步
+     */
+    private boolean deleteConversationSyncMode;
+
 }

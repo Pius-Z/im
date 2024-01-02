@@ -63,6 +63,7 @@ appConfig:
   deleteGroupMemberAfterCallback: false # 删除群成员之后回调
   addGroupMemberAfterCallback: false # 拉人入群之后回调
   addGroupMemberBeforeCallback: false # 拉人入群之前回调
+  deleteConversationSyncMode: true # 多端同步
 
 # logger 配置
 logging:
