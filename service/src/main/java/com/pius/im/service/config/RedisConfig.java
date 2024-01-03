@@ -37,7 +37,7 @@ public class RedisConfig {
 
         // 使用Jackson2JsonRedisSerializer来序列化和反序列化redis的value值
         template.setKeySerializer(new StringRedisSerializer());
-        template.setValueSerializer(serializer);
+        template.setValueSerializer(new StringRedisSerializer());
         template.afterPropertiesSet();
         template.setHashKeySerializer(new StringRedisSerializer());
         template.setHashValueSerializer(serializer);
