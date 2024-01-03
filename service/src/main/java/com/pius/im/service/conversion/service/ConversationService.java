@@ -5,6 +5,7 @@ import com.pius.im.codec.pack.conversation.DeleteConversationPack;
 import com.pius.im.codec.pack.conversation.UpdateConversationPack;
 import com.pius.im.common.ResponseVO;
 import com.pius.im.common.config.AppConfig;
+import com.pius.im.common.constant.Constants;
 import com.pius.im.common.enums.ConversationErrorCode;
 import com.pius.im.common.enums.ConversationTypeEnum;
 import com.pius.im.common.enums.command.ConversationEventCommand;
@@ -14,7 +15,9 @@ import com.pius.im.service.conversion.dao.ImConversationSetEntity;
 import com.pius.im.service.conversion.dao.mapper.ImConversationSetMapper;
 import com.pius.im.service.conversion.model.DeleteConversationReq;
 import com.pius.im.service.conversion.model.UpdateConversationReq;
+import com.pius.im.service.seq.RedisSeq;
 import com.pius.im.service.utils.MessageProducer;
+import com.pius.im.service.utils.WriteUserSeq;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,6 +38,12 @@ public class ConversationService {
     @Autowired
     MessageProducer messageProducer;
 
+    @Autowired
+    RedisSeq redisSeq;
+
+    @Autowired
+    WriteUserSeq writeUserSeq;
+
     public String convertConversationId(Integer type, String fromId, String toId) {
         return type + "_" + fromId + "_" + toId;
     }
@@ -50,6 +59,7 @@ public class ConversationService {
         QueryWrapper<ImConversationSetEntity> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("conversation_id", conversationId);
         queryWrapper.eq("app_id", messageReadContent.getAppId());
+        long seq;
         ImConversationSetEntity imConversationSetEntity = imConversationSetMapper.selectOne(queryWrapper);
         if (imConversationSetEntity == null) {
             imConversationSetEntity = new ImConversationSetEntity();
@@ -57,11 +67,16 @@ public class ConversationService {
             BeanUtils.copyProperties(messageReadContent, imConversationSetEntity);
             imConversationSetEntity.setReadSequence(messageReadContent.getMessageSequence());
             imConversationSetEntity.setToId(toId);
+            seq = redisSeq.doGetSeq(messageReadContent.getAppId() + ":" + Constants.SeqConstants.Conversation);
+            imConversationSetEntity.setSequence(seq);
             imConversationSetMapper.insert(imConversationSetEntity);
         } else {
             imConversationSetEntity.setReadSequence(messageReadContent.getMessageSequence());
+            seq = redisSeq.doGetSeq(messageReadContent.getAppId() + ":" + Constants.SeqConstants.Conversation);
+            imConversationSetEntity.setSequence(seq);
             imConversationSetMapper.readMark(imConversationSetEntity);
         }
+        writeUserSeq.writeUserSeq(messageReadContent.getAppId(), messageReadContent.getFromId(), Constants.SeqConstants.Conversation, seq);
     }
 
     public ResponseVO deleteConversation(DeleteConversationReq req) {
@@ -91,13 +106,17 @@ public class ConversationService {
             if (req.getIsMute() != null) {
                 imConversationSetEntity.setIsMute(req.getIsMute());
             }
+            long seq = redisSeq.doGetSeq(req.getAppId() + ":" + Constants.SeqConstants.Conversation);
+            imConversationSetEntity.setSequence(seq);
             imConversationSetMapper.update(imConversationSetEntity, queryWrapper);
+            writeUserSeq.writeUserSeq(req.getAppId(), req.getFromId(), Constants.SeqConstants.Conversation, seq);
 
             UpdateConversationPack updateConversationPack = new UpdateConversationPack();
             updateConversationPack.setConversationId(req.getConversationId());
             updateConversationPack.setIsMute(imConversationSetEntity.getIsMute());
             updateConversationPack.setIsTop(imConversationSetEntity.getIsTop());
             updateConversationPack.setConversationType(imConversationSetEntity.getConversationType());
+            updateConversationPack.setSequence(seq);
             messageProducer.sendToUserExceptClient(req.getFromId(), ConversationEventCommand.CONVERSATION_UPDATE,
                     updateConversationPack, new ClientInfo(req.getAppId(), req.getClientType(), req.getImei()));
         }

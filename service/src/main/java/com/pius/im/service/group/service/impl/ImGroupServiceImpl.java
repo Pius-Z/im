@@ -27,6 +27,7 @@ import com.pius.im.service.group.model.resp.GetJoinedGroupResp;
 import com.pius.im.service.group.model.resp.GetRoleInGroupResp;
 import com.pius.im.service.group.service.ImGroupMemberService;
 import com.pius.im.service.group.service.ImGroupService;
+import com.pius.im.service.seq.RedisSeq;
 import com.pius.im.service.utils.CallbackService;
 import com.pius.im.service.utils.GroupMessageProducer;
 import lombok.extern.slf4j.Slf4j;
@@ -64,6 +65,9 @@ public class ImGroupServiceImpl implements ImGroupService {
 
     @Autowired
     GroupMessageProducer groupMessageProducer;
+
+    @Autowired
+    RedisSeq redisSeq;
 
     @Override
     @Transactional
@@ -146,6 +150,8 @@ public class ImGroupServiceImpl implements ImGroupService {
         group.setStatus(GroupStatusEnum.NORMAL.getCode());
         BeanUtils.copyProperties(req, group);
         group.setCreateTime(System.currentTimeMillis());
+        long seq = redisSeq.doGetSeq(req.getAppId() + ":" + Constants.SeqConstants.Group);
+        group.setSequence(seq);
 
         int insert = imGroupMapper.insert(group);
         if (insert != 1) {
@@ -217,6 +223,8 @@ public class ImGroupServiceImpl implements ImGroupService {
 
         ImGroupEntity entity = new ImGroupEntity();
         entity.setStatus(GroupStatusEnum.DESTROY.getCode());
+        long seq = redisSeq.doGetSeq(req.getAppId() + ":" + Constants.SeqConstants.Group);
+        entity.setSequence(seq);
 
         int update = imGroupMapper.update(entity, queryWrapper);
         if (update != 1) {
@@ -225,6 +233,7 @@ public class ImGroupServiceImpl implements ImGroupService {
 
         DestroyGroupPack destroyGroupPack = new DestroyGroupPack();
         destroyGroupPack.setGroupId(req.getGroupId());
+        destroyGroupPack.setSequence(seq);
         groupMessageProducer.producer(req.getOperator(), GroupEventCommand.DESTROY_GROUP, destroyGroupPack,
                 new ClientInfo(req.getAppId(), req.getClientType(), req.getImei()));
 
@@ -278,6 +287,8 @@ public class ImGroupServiceImpl implements ImGroupService {
         ImGroupEntity entity = new ImGroupEntity();
         BeanUtils.copyProperties(req, entity);
         entity.setUpdateTime(System.currentTimeMillis());
+        long seq = redisSeq.doGetSeq(req.getAppId() + ":" + Constants.SeqConstants.Group);
+        entity.setSequence(seq);
 
         int row = imGroupMapper.update(entity, queryWrapper);
         if (row != 1) {
@@ -286,6 +297,7 @@ public class ImGroupServiceImpl implements ImGroupService {
 
         UpdateGroupInfoPack updateGroupInfoPack = new UpdateGroupInfoPack();
         BeanUtils.copyProperties(req, updateGroupInfoPack);
+        updateGroupInfoPack.setSequence(seq);
         groupMessageProducer.producer(req.getOperator(), GroupEventCommand.UPDATED_GROUP,
                 updateGroupInfoPack, new ClientInfo(req.getAppId(), req.getClientType(), req.getImei()));
 
