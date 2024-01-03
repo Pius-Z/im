@@ -1,6 +1,8 @@
 package com.pius.im.service.friendship.controller;
 
 import com.pius.im.common.ResponseVO;
+import com.pius.im.common.model.SyncReq;
+import com.pius.im.common.model.SyncResp;
 import com.pius.im.service.friendship.dao.ImFriendShipEntity;
 import com.pius.im.service.friendship.model.req.*;
 import com.pius.im.service.friendship.model.resp.CheckFriendShipResp;
@@ -61,23 +63,28 @@ public class ImFriendShipController {
     }
 
     @RequestMapping("/checkFriendShip")
-    public ResponseVO<List<CheckFriendShipResp>> checkFriendShip(@RequestBody @Validated CheckFriendShipReq req){
+    public ResponseVO<List<CheckFriendShipResp>> checkFriendShip(@RequestBody @Validated CheckFriendShipReq req) {
         return imFriendShipService.checkFriendShip(req);
     }
 
     @RequestMapping("/addBlack")
-    public ResponseVO addBlack(@RequestBody @Validated AddFriendShipBlackReq req){
+    public ResponseVO addBlack(@RequestBody @Validated AddFriendShipBlackReq req) {
         return imFriendShipService.addBlack(req);
     }
 
     @RequestMapping("/deleteBlack")
-    public ResponseVO deleteBlack(@RequestBody @Validated DeleteBlackReq req){
+    public ResponseVO deleteBlack(@RequestBody @Validated DeleteBlackReq req) {
         return imFriendShipService.deleteBlack(req);
     }
 
     @RequestMapping("/checkBlack")
-    public ResponseVO checkBlack(@RequestBody @Validated CheckFriendShipReq req){
+    public ResponseVO checkBlack(@RequestBody @Validated CheckFriendShipReq req) {
         return imFriendShipService.checkBlack(req);
+    }
+
+    @RequestMapping("/syncFriendshipList")
+    public ResponseVO<SyncResp<ImFriendShipEntity>> syncFriendshipList(@RequestBody @Validated SyncReq req) {
+        return imFriendShipService.syncFriendshipList(req);
     }
 
 }

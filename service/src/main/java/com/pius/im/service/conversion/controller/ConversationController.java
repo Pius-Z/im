@@ -1,6 +1,9 @@
 package com.pius.im.service.conversion.controller;
 
 import com.pius.im.common.ResponseVO;
+import com.pius.im.common.model.SyncReq;
+import com.pius.im.common.model.SyncResp;
+import com.pius.im.service.conversion.dao.ImConversationSetEntity;
 import com.pius.im.service.conversion.model.DeleteConversationReq;
 import com.pius.im.service.conversion.model.UpdateConversationReq;
 import com.pius.im.service.conversion.service.ConversationService;
@@ -29,6 +32,11 @@ public class ConversationController {
     @RequestMapping("/update")
     public ResponseVO updateConversation(@RequestBody @Validated UpdateConversationReq updateConversationReq) {
         return conversationService.updateConversation(updateConversationReq);
+    }
+
+    @RequestMapping("/syncConversationList")
+    public ResponseVO<SyncResp<ImConversationSetEntity>> syncFriendShipList(@RequestBody @Validated SyncReq req) {
+        return conversationService.syncConversationSet(req);
     }
 
 }

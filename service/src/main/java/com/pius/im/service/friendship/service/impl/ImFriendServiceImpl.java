@@ -3,6 +3,7 @@ package com.pius.im.service.friendship.service.impl;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.pius.im.codec.pack.friendship.*;
 import com.pius.im.common.ResponseVO;
@@ -15,6 +16,8 @@ import com.pius.im.common.enums.FriendShipStatusEnum;
 import com.pius.im.common.enums.command.FriendshipEventCommand;
 import com.pius.im.common.exception.ApplicationException;
 import com.pius.im.common.model.RequestBase;
+import com.pius.im.common.model.SyncReq;
+import com.pius.im.common.model.SyncResp;
 import com.pius.im.service.friendship.dao.ImFriendShipEntity;
 import com.pius.im.service.friendship.dao.mapper.ImFriendShipMapper;
 import com.pius.im.service.friendship.model.callback.AddFriendAfterCallbackDto;
@@ -595,4 +598,36 @@ public class ImFriendServiceImpl implements ImFriendService {
 
         return ResponseVO.successResponse(resp);
     }
+
+    @Override
+    public ResponseVO<SyncResp<ImFriendShipEntity>> syncFriendshipList(SyncReq req) {
+        if (req.getMaxLimit() > 100) {
+            req.setMaxLimit(100);
+        }
+
+        QueryWrapper<ImFriendShipEntity> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("from_id", req.getOperator());
+        queryWrapper.gt("friend_sequence", req.getLastSequence());
+        queryWrapper.eq("app_id", req.getAppId());
+        queryWrapper.last(" limit " + req.getMaxLimit());
+        queryWrapper.orderByAsc("friend_sequence");
+        List<ImFriendShipEntity> list = imFriendShipMapper.selectList(queryWrapper);
+
+        SyncResp<ImFriendShipEntity> resp = new SyncResp<>();
+        // 设置最大seq
+        Long friendShipMaxSeq = imFriendShipMapper.getFriendShipMaxSeq(req.getAppId(), req.getOperator());
+        resp.setMaxSequence(friendShipMaxSeq);
+
+        if (!CollectionUtils.isEmpty(list)) {
+            resp.setDataList(list);
+            // 设置是否拉取完毕
+            ImFriendShipEntity maxSeqEntity = list.get(list.size() - 1);
+            resp.setCompleted(maxSeqEntity.getFriendSequence() >= friendShipMaxSeq);
+        } else {
+            resp.setCompleted(true);
+        }
+
+        return ResponseVO.successResponse(resp);
+    }
+
 }

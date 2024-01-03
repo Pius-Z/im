@@ -2,6 +2,8 @@ package com.pius.im.service.friendship.service;
 
 import com.pius.im.common.ResponseVO;
 import com.pius.im.common.model.RequestBase;
+import com.pius.im.common.model.SyncReq;
+import com.pius.im.common.model.SyncResp;
 import com.pius.im.service.friendship.dao.ImFriendShipEntity;
 import com.pius.im.service.friendship.model.req.*;
 import com.pius.im.service.friendship.model.resp.CheckFriendShipResp;
@@ -39,5 +41,6 @@ public interface ImFriendService {
 
     ResponseVO checkBlack(CheckFriendShipReq req);
 
+    ResponseVO<SyncResp<ImFriendShipEntity>> syncFriendshipList(SyncReq req);
 
 }

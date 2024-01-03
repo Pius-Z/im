@@ -18,6 +18,8 @@ import com.pius.im.common.enums.GroupTypeEnum;
 import com.pius.im.common.enums.command.GroupEventCommand;
 import com.pius.im.common.exception.ApplicationException;
 import com.pius.im.common.model.ClientInfo;
+import com.pius.im.common.model.SyncReq;
+import com.pius.im.common.model.SyncResp;
 import com.pius.im.service.group.dao.ImGroupEntity;
 import com.pius.im.service.group.dao.mapper.ImGroupMapper;
 import com.pius.im.service.group.model.callback.DestroyGroupCallbackDto;
@@ -477,6 +479,57 @@ public class ImGroupServiceImpl implements ImGroupService {
         }
 
         return ResponseVO.successResponse();
+    }
+
+    @Override
+    public ResponseVO<SyncResp<ImGroupEntity>> syncJoinedGroupList(SyncReq req) {
+        if (req.getMaxLimit() > 100) {
+            req.setMaxLimit(100);
+        }
+
+        SyncResp<ImGroupEntity> resp = new SyncResp<>();
+
+        ResponseVO<Collection<String>> memberJoinedGroup = imGroupMemberService.syncMemberJoinedGroup(req.getOperator(), req.getAppId());
+        if (memberJoinedGroup.isOk()) {
+
+            Collection<String> data = memberJoinedGroup.getData();
+            QueryWrapper<ImGroupEntity> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("app_id", req.getAppId());
+            queryWrapper.in("group_id", data);
+            queryWrapper.gt("sequence", req.getLastSequence());
+            queryWrapper.last(" limit " + req.getMaxLimit());
+            queryWrapper.orderByAsc("sequence");
+
+            List<ImGroupEntity> list = imGroupMapper.selectList(queryWrapper);
+            // 设置最大seq
+            Long maxSeq = imGroupMapper.getGroupMaxSeq(data, req.getAppId());
+            resp.setMaxSequence(maxSeq);
+
+            if (!CollectionUtils.isEmpty(list)) {
+                resp.setDataList(list);
+                // 设置是否拉取完毕
+                ImGroupEntity imGroupEntity = list.get(list.size() - 1);
+                resp.setCompleted(imGroupEntity.getSequence() >= maxSeq);
+            } else {
+                resp.setCompleted(true);
+            }
+        } else {
+            return ResponseVO.errorResponse(memberJoinedGroup.getCode(), memberJoinedGroup.getMsg());
+        }
+
+        return ResponseVO.successResponse(resp);
+    }
+
+    @Override
+    public Long getUserGroupMaxSeq(String userId, Integer appId) {
+        ResponseVO<Collection<String>> memberJoinedGroup = imGroupMemberService.syncMemberJoinedGroup(userId, appId);
+        if (!memberJoinedGroup.isOk()) {
+            throw new ApplicationException(500, "getUserGroupMaxSeq error");
+        }
+        if (memberJoinedGroup.getData().isEmpty()){
+            return 0L;
+        }
+        return imGroupMapper.getGroupMaxSeq(memberJoinedGroup.getData(), appId);
     }
 
 }

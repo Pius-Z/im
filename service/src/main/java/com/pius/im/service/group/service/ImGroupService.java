@@ -1,6 +1,8 @@
 package com.pius.im.service.group.service;
 
 import com.pius.im.common.ResponseVO;
+import com.pius.im.common.model.SyncReq;
+import com.pius.im.common.model.SyncResp;
 import com.pius.im.service.group.dao.ImGroupEntity;
 import com.pius.im.service.group.model.req.*;
 import com.pius.im.service.group.model.resp.GetGroupAndMemberResp;
@@ -29,5 +31,9 @@ public interface ImGroupService {
     ResponseVO transferGroup(TransferGroupReq req);
 
     ResponseVO muteGroup(MuteGroupReq req);
+
+    ResponseVO<SyncResp<ImGroupEntity>> syncJoinedGroupList(SyncReq req);
+
+    Long getUserGroupMaxSeq(String userId, Integer appId);
 
 }

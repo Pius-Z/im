@@ -42,4 +42,6 @@ public interface ImGroupMemberService {
 
     ResponseVO muteGroupMember(MuteGroupMemberReq req);
 
+    ResponseVO<Collection<String>> syncMemberJoinedGroup(String operator, Integer appId);
+
 }

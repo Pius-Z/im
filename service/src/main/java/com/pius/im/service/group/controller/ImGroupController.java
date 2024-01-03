@@ -1,6 +1,9 @@
 package com.pius.im.service.group.controller;
 
 import com.pius.im.common.ResponseVO;
+import com.pius.im.common.model.SyncReq;
+import com.pius.im.common.model.SyncResp;
+import com.pius.im.service.group.dao.ImGroupEntity;
 import com.pius.im.service.group.model.req.*;
 import com.pius.im.service.group.model.resp.GetGroupAndMemberResp;
 import com.pius.im.service.group.model.resp.GetJoinedGroupResp;
@@ -61,6 +64,11 @@ public class ImGroupController {
     @RequestMapping("/mute")
     public ResponseVO mute(@RequestBody @Validated MuteGroupReq req) {
         return imGroupService.muteGroup(req);
+    }
+
+    @RequestMapping("/syncJoinedGroup")
+    public ResponseVO<SyncResp<ImGroupEntity>> syncJoinedGroup(@RequestBody @Validated SyncReq req)  {
+        return imGroupService.syncJoinedGroupList(req);
     }
 
 }
