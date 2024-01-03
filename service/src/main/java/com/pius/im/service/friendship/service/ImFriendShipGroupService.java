@@ -17,4 +17,6 @@ public interface ImFriendShipGroupService {
 
     ResponseVO<ImFriendShipGroupEntity> getGroup(String fromId, String groupName, Integer appId);
 
+    Long updateSeq(String fromId, String groupName, Integer appId);
+
 }

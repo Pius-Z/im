@@ -63,10 +63,13 @@ public class ImFriendShipGroupMemberServiceImpl implements ImFriendShipGroupMemb
             }
         }
 
+        Long seq = imFriendShipGroupService.updateSeq(req.getFromId(), req.getGroupName(), req.getAppId());
+
         AddFriendGroupMemberPack addFriendGroupMemberPack = new AddFriendGroupMemberPack();
         addFriendGroupMemberPack.setFromId(req.getFromId());
         addFriendGroupMemberPack.setGroupName(req.getGroupName());
         addFriendGroupMemberPack.setToIds(successId);
+        addFriendGroupMemberPack.setSequence(seq);
         messageProducer.sendToUserExceptClient(req.getFromId(), FriendshipEventCommand.FRIEND_GROUP_MEMBER_ADD,
                 addFriendGroupMemberPack, new ClientInfo(req.getAppId(), req.getClientType(), req.getImei()));
 
@@ -115,10 +118,13 @@ public class ImFriendShipGroupMemberServiceImpl implements ImFriendShipGroupMemb
             }
         }
 
+        Long seq = imFriendShipGroupService.updateSeq(req.getFromId(), req.getGroupName(), req.getAppId());
+
         DeleteFriendGroupMemberPack deleteFriendGroupMemberPack = new DeleteFriendGroupMemberPack();
         deleteFriendGroupMemberPack.setFromId(req.getFromId());
         deleteFriendGroupMemberPack.setGroupName(req.getGroupName());
         deleteFriendGroupMemberPack.setToIds(successId);
+        deleteFriendGroupMemberPack.setSequence(seq);
         messageProducer.sendToUserExceptClient(req.getFromId(), FriendshipEventCommand.FRIEND_GROUP_MEMBER_DELETE,
                 deleteFriendGroupMemberPack, new ClientInfo(req.getAppId(), req.getClientType(), req.getImei()));
 
