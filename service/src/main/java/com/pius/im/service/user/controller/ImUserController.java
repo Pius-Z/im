@@ -6,6 +6,7 @@ import com.pius.im.common.route.RouteHandle;
 import com.pius.im.common.route.RouteInfo;
 import com.pius.im.common.utils.RouteInfoParseUtil;
 import com.pius.im.service.user.model.req.DeleteUserReq;
+import com.pius.im.service.user.model.req.GetUserSequenceReq;
 import com.pius.im.service.user.model.req.ImportUserReq;
 import com.pius.im.service.user.model.req.LoginReq;
 import com.pius.im.service.user.model.resp.ImportOrDeleteUserResp;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @Author: Pius
@@ -63,6 +65,11 @@ public class ImUserController {
         }
 
         return ResponseVO.errorResponse();
+    }
+
+    @RequestMapping("/getUserSequence")
+    public ResponseVO<Map<Object, Object>> getUserSequence(@RequestBody @Validated GetUserSequenceReq req) {
+        return imUserService.getUserSequence(req);
     }
 
 }

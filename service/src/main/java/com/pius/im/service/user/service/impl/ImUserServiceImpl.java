@@ -10,6 +10,7 @@ import com.pius.im.common.enums.DelFlagEnum;
 import com.pius.im.common.enums.UserErrorCode;
 import com.pius.im.common.enums.command.UserEventCommand;
 import com.pius.im.common.exception.ApplicationException;
+import com.pius.im.service.group.service.ImGroupService;
 import com.pius.im.service.user.dao.ImUserDataEntity;
 import com.pius.im.service.user.dao.mapper.ImUserDataMapper;
 import com.pius.im.service.user.model.req.*;
@@ -21,11 +22,13 @@ import com.pius.im.service.utils.MessageProducer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @Author: Pius
@@ -46,6 +49,12 @@ public class ImUserServiceImpl implements ImUserService {
 
     @Autowired
     MessageProducer messageProducer;
+
+    @Autowired
+    StringRedisTemplate stringRedisTemplate;
+
+    @Autowired
+    ImGroupService imGroupService;
 
     @Override
     public ResponseVO<ImportOrDeleteUserResp> importUser(ImportUserReq req) {
@@ -212,6 +221,14 @@ public class ImUserServiceImpl implements ImUserService {
         } else {
             throw new ApplicationException(UserErrorCode.USER_IS_NOT_EXIST);
         }
+    }
+
+    @Override
+    public ResponseVO<Map<Object, Object>> getUserSequence(GetUserSequenceReq req) {
+        Map<Object, Object> map = stringRedisTemplate.opsForHash().entries(req.getAppId() + ":" + Constants.RedisConstants.SeqPrefix + ":" + req.getUserId());
+        Long groupSeq = imGroupService.getUserGroupMaxSeq(req.getUserId(), req.getAppId());
+        map.put(Constants.SeqConstants.Group, groupSeq);
+        return ResponseVO.successResponse(map);
     }
 
 }
