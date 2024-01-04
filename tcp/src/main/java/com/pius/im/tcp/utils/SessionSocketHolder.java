@@ -1,10 +1,14 @@
 package com.pius.im.tcp.utils;
 
 import com.alibaba.fastjson.JSONObject;
+import com.pius.im.codec.pack.user.UserStatusChangeNotifyPack;
+import com.pius.im.codec.proto.MessageHeader;
 import com.pius.im.common.constant.Constants;
 import com.pius.im.common.enums.ImConnectStatusEnum;
+import com.pius.im.common.enums.command.UserEventCommand;
 import com.pius.im.common.model.UserClientDto;
 import com.pius.im.common.model.UserSession;
+import com.pius.im.tcp.publish.MessageProducer;
 import com.pius.im.tcp.redis.RedisManager;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.AttributeKey;
@@ -80,6 +84,20 @@ public class SessionSocketHolder {
         RedissonClient redissonClient = RedisManager.getRedissonClient();
         RMap<Object, Object> map = redissonClient.getMap(appId + Constants.RedisConstants.UserSessionConstants + userId);
         map.remove(clientType + ":" + imei);
+
+        MessageHeader messageHeader = new MessageHeader();
+        messageHeader.setAppId(appId);
+        messageHeader.setImei(imei);
+        messageHeader.setClientType(clientType);
+
+        // 用户在线状态变化通知
+        UserStatusChangeNotifyPack userStatusChangeNotifyPack = new UserStatusChangeNotifyPack();
+        userStatusChangeNotifyPack.setAppId(appId);
+        userStatusChangeNotifyPack.setUserId(userId);
+        userStatusChangeNotifyPack.setStatus(ImConnectStatusEnum.OFFLINE_STATUS.getCode());
+        MessageProducer.sendMessage(userStatusChangeNotifyPack, messageHeader,
+                UserEventCommand.USER_ONLINE_STATUS_CHANGE.getCommand());
+
         nioSocketChannel.close();
     }
 
@@ -100,6 +118,18 @@ public class SessionSocketHolder {
             userSession.setConnectState(ImConnectStatusEnum.OFFLINE_STATUS.getCode());
             map.put(clientType + ":" + imei, JSONObject.toJSONString(userSession));
         }
+
+        MessageHeader messageHeader = new MessageHeader();
+        messageHeader.setAppId(appId);
+        messageHeader.setImei(imei);
+        messageHeader.setClientType(clientType);
+
+        UserStatusChangeNotifyPack userStatusChangeNotifyPack = new UserStatusChangeNotifyPack();
+        userStatusChangeNotifyPack.setAppId(appId);
+        userStatusChangeNotifyPack.setUserId(userId);
+        userStatusChangeNotifyPack.setStatus(ImConnectStatusEnum.OFFLINE_STATUS.getCode());
+        MessageProducer.sendMessage(userStatusChangeNotifyPack, messageHeader,
+                UserEventCommand.USER_ONLINE_STATUS_CHANGE.getCommand());
 
         nioSocketChannel.close();
     }

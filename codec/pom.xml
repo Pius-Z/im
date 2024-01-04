@@ -32,6 +32,12 @@
             <version>2.0.40</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.pius</groupId>
+            <artifactId>common</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+
     </dependencies>
 
 </project>

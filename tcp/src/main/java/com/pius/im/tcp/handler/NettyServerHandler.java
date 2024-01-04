@@ -5,6 +5,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.TypeReference;
 import com.pius.im.codec.pack.LoginPack;
 import com.pius.im.codec.pack.message.ChatMessageAck;
+import com.pius.im.codec.pack.user.LoginAckPack;
+import com.pius.im.codec.pack.user.UserStatusChangeNotifyPack;
 import com.pius.im.codec.proto.Message;
 import com.pius.im.codec.proto.MessagePack;
 import com.pius.im.common.ResponseVO;
@@ -13,6 +15,7 @@ import com.pius.im.common.enums.ImConnectStatusEnum;
 import com.pius.im.common.enums.command.GroupEventCommand;
 import com.pius.im.common.enums.command.MessageCommand;
 import com.pius.im.common.enums.command.SystemCommand;
+import com.pius.im.common.enums.command.UserEventCommand;
 import com.pius.im.common.model.UserClientDto;
 import com.pius.im.common.model.UserSession;
 import com.pius.im.common.model.message.CheckSendMessageReq;
@@ -105,6 +108,25 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<Message> {
             dto.setImei(message.getMessageHeader().getImei());
             RTopic topic = redissonClient.getTopic(Constants.RedisConstants.UserLoginChannel);
             topic.publish(JSONObject.toJSONString(dto));
+
+            // 登录后在线状态变更
+            UserStatusChangeNotifyPack userStatusChangeNotifyPack = new UserStatusChangeNotifyPack();
+            userStatusChangeNotifyPack.setAppId(message.getMessageHeader().getAppId());
+            userStatusChangeNotifyPack.setUserId(loginPack.getUserId());
+            userStatusChangeNotifyPack.setStatus(ImConnectStatusEnum.ONLINE_STATUS.getCode());
+            MessageProducer.sendMessage(userStatusChangeNotifyPack, message.getMessageHeader(),
+                    UserEventCommand.USER_ONLINE_STATUS_CHANGE.getCommand());
+
+            // 登录确认ack
+            MessagePack<LoginAckPack> messagePack = new MessagePack<>();
+            LoginAckPack loginAckPack = new LoginAckPack();
+            loginAckPack.setUserId(loginPack.getUserId());
+            messagePack.setCommand(SystemCommand.LOGINACK.getCommand());
+            messagePack.setData(loginAckPack);
+            messagePack.setImei(message.getMessageHeader().getImei());
+            messagePack.setAppId(message.getMessageHeader().getAppId());
+            channelHandlerContext.channel().writeAndFlush(messagePack);
+
         } else if (command == SystemCommand.LOGOUT.getCommand()) {
             // 登出command
             SessionSocketHolder.removeUserSession((NioSocketChannel) channelHandlerContext.channel());
@@ -160,7 +182,7 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<Message> {
      */
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
-        //设置离线
+        // 设置离线
         SessionSocketHolder.offlineUserSession((NioSocketChannel) ctx.channel());
         ctx.close();
     }

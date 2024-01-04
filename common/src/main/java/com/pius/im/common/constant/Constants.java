@@ -60,6 +60,11 @@ public class Constants {
          */
         public static final String SeqPrefix = "seq";
 
+        /**
+         * 用户订阅列表，格式 ：appId + :subscribe: + userId。Hash结构，filed为订阅自己的人
+         */
+        public static final String Subscribe = "subscribe";
+
     }
 
     public static class RabbitMQConstants {

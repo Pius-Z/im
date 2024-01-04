@@ -43,4 +43,6 @@ public interface ImFriendService {
 
     ResponseVO<SyncResp<ImFriendShipEntity>> syncFriendshipList(SyncReq req);
 
+    List<String> getAllFriendId(String userId, Integer appId);
+
 }
