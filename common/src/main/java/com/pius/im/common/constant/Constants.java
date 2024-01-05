@@ -65,6 +65,11 @@ public class Constants {
          */
         public static final String Subscribe = "subscribe";
 
+        /**
+         * 用户自定义在线状态，格式 ：appId + :userCustomerStatus: + userId。
+         */
+        public static final String UserCustomStatus = "userCustomStatus";
+
     }
 
     public static class RabbitMQConstants {

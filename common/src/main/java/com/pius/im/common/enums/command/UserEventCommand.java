@@ -26,6 +26,16 @@ public enum UserEventCommand implements Command {
      */
     USER_ONLINE_STATUS_CHANGE_NOTIFY_SYNC(4003),
 
+    /**
+     * 4004 用户自定义在线状态变化通知报文
+     */
+    USER_CUSTOM_STATUS_CHANGE_NOTIFY(4004),
+
+    /**
+     * 4005 用户自定义在线状态变化通知同步报文
+     */
+    USER_CUSTOM_STATUS_CHANGE_NOTIFY_SYNC(4005),
+
     ;
 
     private int command;

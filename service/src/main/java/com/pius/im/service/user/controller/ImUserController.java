@@ -79,4 +79,10 @@ public class ImUserController {
         return ResponseVO.successResponse();
     }
 
+    @RequestMapping("/setUserCustomStatus")
+    public ResponseVO setUserCustomStatus(@RequestBody @Validated SetUserCustomStatusReq req) {
+        imUserStatusService.setUserCustomStatus(req);
+        return ResponseVO.successResponse();
+    }
+
 }

@@ -1,12 +1,16 @@
 package com.pius.im.service.user.service.impl;
 
+import com.alibaba.fastjson.JSONObject;
+import com.pius.im.codec.pack.user.UserCustomStatusChangeNotifyPack;
 import com.pius.im.codec.pack.user.UserStatusChangeNotifyPack;
 import com.pius.im.common.constant.Constants;
+import com.pius.im.common.enums.command.Command;
 import com.pius.im.common.enums.command.UserEventCommand;
 import com.pius.im.common.model.ClientInfo;
 import com.pius.im.common.model.UserSession;
 import com.pius.im.service.friendship.service.ImFriendService;
 import com.pius.im.service.user.model.UserStatusChangeNotifyContent;
+import com.pius.im.service.user.model.req.SetUserCustomStatusReq;
 import com.pius.im.service.user.model.req.SubscribeUserOnlineStatusReq;
 import com.pius.im.service.user.service.ImUserStatusService;
 import com.pius.im.service.utils.MessageProducer;
@@ -46,20 +50,21 @@ public class ImUserStatusServiceImpl implements ImUserStatusService {
         BeanUtils.copyProperties(content, userStatusChangeNotifyPack);
         userStatusChangeNotifyPack.setClient(userSession);
 
-        syncSender(userStatusChangeNotifyPack, content.getUserId(), content);
+        syncSender(userStatusChangeNotifyPack, content.getUserId(), content,
+                UserEventCommand.USER_ONLINE_STATUS_CHANGE_NOTIFY_SYNC);
 
-        dispatcher(userStatusChangeNotifyPack, content.getUserId(), content.getAppId());
+        dispatcher(userStatusChangeNotifyPack, content.getUserId(), content.getAppId(),
+                UserEventCommand.USER_ONLINE_STATUS_CHANGE_NOTIFY);
     }
 
-    private void syncSender(Object pack, String userId, ClientInfo clientInfo) {
-        messageProducer.sendToUserExceptClient(userId, UserEventCommand.USER_ONLINE_STATUS_CHANGE_NOTIFY_SYNC,
-                pack, clientInfo);
+    private void syncSender(Object pack, String userId, ClientInfo clientInfo, Command command) {
+        messageProducer.sendToUserExceptClient(userId, command, pack, clientInfo);
     }
 
-    private void dispatcher(Object pack, String userId, Integer appId) {
+    private void dispatcher(Object pack, String userId, Integer appId, Command command) {
         List<String> allFriendId = imFriendService.getAllFriendId(userId, appId);
         for (String friendId : allFriendId) {
-            messageProducer.sendToUser(friendId, UserEventCommand.USER_ONLINE_STATUS_CHANGE_NOTIFY, pack, appId);
+            messageProducer.sendToUser(friendId, command, pack, appId);
         }
 
         String userKey = appId + ":" + Constants.RedisConstants.Subscribe + ":" + userId;
@@ -68,8 +73,7 @@ public class ImUserStatusServiceImpl implements ImUserStatusService {
             String filed = (String) key;
             long expire = Long.parseLong((String) stringRedisTemplate.opsForHash().get(userKey, filed));
             if (expire > 0 && expire > System.currentTimeMillis()) {
-                messageProducer.sendToUser(filed, UserEventCommand.USER_ONLINE_STATUS_CHANGE_NOTIFY,
-                        pack, appId);
+                messageProducer.sendToUser(filed, command, pack, appId);
             } else {
                 stringRedisTemplate.opsForHash().delete(userKey, filed);
             }
@@ -87,6 +91,22 @@ public class ImUserStatusServiceImpl implements ImUserStatusService {
             String userKey = req.getAppId() + ":" + Constants.RedisConstants.Subscribe + ":" + beSubUserId;
             stringRedisTemplate.opsForHash().put(userKey, req.getOperator(), Long.toString(subExpireTime));
         }
+    }
+
+    @Override
+    public void setUserCustomStatus(SetUserCustomStatusReq req) {
+        UserCustomStatusChangeNotifyPack userCustomStatusChangeNotifyPack = new UserCustomStatusChangeNotifyPack();
+        userCustomStatusChangeNotifyPack.setCustomStatus(req.getCustomStatus());
+        userCustomStatusChangeNotifyPack.setCustomText(req.getCustomText());
+        userCustomStatusChangeNotifyPack.setUserId(req.getUserId());
+        String key = req.getAppId() + ":" + Constants.RedisConstants.UserCustomStatus + ":" + req.getUserId();
+        stringRedisTemplate.opsForValue().set(key, JSONObject.toJSONString(userCustomStatusChangeNotifyPack));
+
+        syncSender(userCustomStatusChangeNotifyPack, req.getUserId(),
+                new ClientInfo(req.getAppId(), req.getClientType(), req.getImei()),
+                UserEventCommand.USER_CUSTOM_STATUS_CHANGE_NOTIFY_SYNC);
+        dispatcher(userCustomStatusChangeNotifyPack, req.getUserId(), req.getAppId(),
+                UserEventCommand.USER_CUSTOM_STATUS_CHANGE_NOTIFY);
     }
 
 }
