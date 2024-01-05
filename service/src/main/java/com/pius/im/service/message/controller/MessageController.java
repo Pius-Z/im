@@ -6,6 +6,7 @@ import com.pius.im.common.model.SyncReq;
 import com.pius.im.common.model.SyncResp;
 import com.pius.im.common.model.message.CheckSendMessageReq;
 import com.pius.im.common.model.message.OfflineMessageContent;
+import com.pius.im.common.model.message.RecallMessageContent;
 import com.pius.im.service.message.model.req.SendMessageReq;
 import com.pius.im.service.message.model.resp.SendMessageResp;
 import com.pius.im.service.message.service.GroupMessageService;
@@ -51,6 +52,12 @@ public class MessageController {
     @RequestMapping("/syncOfflineMessage")
     public ResponseVO<SyncResp<OfflineMessageContent>> syncOfflineMessage(@RequestBody @Validated SyncReq req) {
         return messageSyncService.syncOfflineMessage(req);
+    }
+
+    @RequestMapping("/recall")
+    public ResponseVO recall(@RequestBody @Validated RecallMessageContent req) {
+        messageSyncService.recallMessage(req);
+        return ResponseVO.successResponse();
     }
 
 }

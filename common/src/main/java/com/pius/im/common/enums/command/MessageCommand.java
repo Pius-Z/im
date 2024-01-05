@@ -39,6 +39,21 @@ public enum MessageCommand implements Command {
      */
     MSG_READ_RECEIPT(0x41E),
 
+    /**
+     * 消息撤回 1050
+     */
+    MSG_RECALL(0x41A),
+
+    /**
+     * 消息撤回ack 1051
+     */
+    MSG_RECALL_ACK(0x41B),
+
+    /**
+     * 消息撤回通知 1052
+     */
+    MSG_RECALL_NOTIFY(0x41C),
+
     ;
 
     private int command;

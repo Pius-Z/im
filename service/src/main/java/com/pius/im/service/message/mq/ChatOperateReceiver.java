@@ -7,6 +7,7 @@ import com.pius.im.common.enums.command.MessageCommand;
 import com.pius.im.common.model.message.MessageContent;
 import com.pius.im.common.model.message.MessageReadContent;
 import com.pius.im.common.model.message.MessageReceiveAckContent;
+import com.pius.im.common.model.message.RecallMessageContent;
 import com.pius.im.service.message.service.MessageSyncService;
 import com.pius.im.service.message.service.P2PMessageService;
 import com.rabbitmq.client.Channel;
@@ -24,6 +25,7 @@ import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @Author: Pius
@@ -66,6 +68,10 @@ public class ChatOperateReceiver {
                 // 消息已读
                 MessageReadContent messageReadContent = jsonObject.toJavaObject(MessageReadContent.class);
                 messageSyncService.readMark(messageReadContent);
+            } else if (Objects.equals(command, MessageCommand.MSG_RECALL.getCommand())) {
+                // 撤回消息
+                RecallMessageContent messageContent = jsonObject.toJavaObject(RecallMessageContent.class);
+                messageSyncService.recallMessage(messageContent);
             }
             channel.basicAck(deliveryTag, false);
         } catch (Exception e) {
