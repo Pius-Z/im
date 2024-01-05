@@ -1,6 +1,7 @@
 package com.pius.im.service.user.service;
 
 import com.pius.im.service.user.model.UserStatusChangeNotifyContent;
+import com.pius.im.service.user.model.req.SubscribeUserOnlineStatusReq;
 
 /**
  * @Author: Pius
@@ -9,5 +10,7 @@ import com.pius.im.service.user.model.UserStatusChangeNotifyContent;
 public interface ImUserStatusService {
 
     void processUserOnlineStatusNotify(UserStatusChangeNotifyContent content);
+
+    void subscribeUserOnlineStatus(SubscribeUserOnlineStatusReq req);
 
 }

@@ -5,12 +5,10 @@ import com.pius.im.common.ResponseVO;
 import com.pius.im.common.route.RouteHandle;
 import com.pius.im.common.route.RouteInfo;
 import com.pius.im.common.utils.RouteInfoParseUtil;
-import com.pius.im.service.user.model.req.DeleteUserReq;
-import com.pius.im.service.user.model.req.GetUserSequenceReq;
-import com.pius.im.service.user.model.req.ImportUserReq;
-import com.pius.im.service.user.model.req.LoginReq;
+import com.pius.im.service.user.model.req.*;
 import com.pius.im.service.user.model.resp.ImportOrDeleteUserResp;
 import com.pius.im.service.user.service.ImUserService;
+import com.pius.im.service.user.service.ImUserStatusService;
 import com.pius.im.service.utils.ZKit;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
@@ -32,6 +30,9 @@ public class ImUserController {
 
     @Autowired
     ImUserService imUserService;
+
+    @Autowired
+    ImUserStatusService imUserStatusService;
 
     @Autowired
     ZKit zKit;
@@ -70,6 +71,12 @@ public class ImUserController {
     @RequestMapping("/getUserSequence")
     public ResponseVO<Map<Object, Object>> getUserSequence(@RequestBody @Validated GetUserSequenceReq req) {
         return imUserService.getUserSequence(req);
+    }
+
+    @RequestMapping("/subscribeUserOnlineStatus")
+    public ResponseVO subscribeUserOnlineStatus(@RequestBody @Validated SubscribeUserOnlineStatusReq req) {
+        imUserStatusService.subscribeUserOnlineStatus(req);
+        return ResponseVO.successResponse();
     }
 
 }

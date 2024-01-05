@@ -7,6 +7,7 @@ import com.pius.im.common.model.ClientInfo;
 import com.pius.im.common.model.UserSession;
 import com.pius.im.service.friendship.service.ImFriendService;
 import com.pius.im.service.user.model.UserStatusChangeNotifyContent;
+import com.pius.im.service.user.model.req.SubscribeUserOnlineStatusReq;
 import com.pius.im.service.user.service.ImUserStatusService;
 import com.pius.im.service.utils.MessageProducer;
 import com.pius.im.service.utils.UserSessionUtils;
@@ -61,7 +62,7 @@ public class ImUserStatusServiceImpl implements ImUserStatusService {
             messageProducer.sendToUser(friendId, UserEventCommand.USER_ONLINE_STATUS_CHANGE_NOTIFY, pack, appId);
         }
 
-        String userKey = appId + ":" + Constants.RedisConstants.Subscribe + userId;
+        String userKey = appId + ":" + Constants.RedisConstants.Subscribe + ":" + userId;
         Set<Object> keys = stringRedisTemplate.opsForHash().keys(userKey);
         for (Object key : keys) {
             String filed = (String) key;
@@ -72,6 +73,19 @@ public class ImUserStatusServiceImpl implements ImUserStatusService {
             } else {
                 stringRedisTemplate.opsForHash().delete(userKey, filed);
             }
+        }
+    }
+
+    @Override
+    public void subscribeUserOnlineStatus(SubscribeUserOnlineStatusReq req) {
+        long subExpireTime = 0L;
+        if (req != null && req.getSubTime() > 0) {
+            subExpireTime = System.currentTimeMillis() + req.getSubTime();
+        }
+
+        for (String beSubUserId : req.getSubUserId()) {
+            String userKey = req.getAppId() + ":" + Constants.RedisConstants.Subscribe + ":" + beSubUserId;
+            stringRedisTemplate.opsForHash().put(userKey, req.getOperator(), Long.toString(subExpireTime));
         }
     }
 
