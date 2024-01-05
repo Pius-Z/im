@@ -2,11 +2,13 @@ package com.pius.im.service.user.controller;
 
 import com.pius.im.common.ClientType;
 import com.pius.im.common.ResponseVO;
+import com.pius.im.common.model.RequestBase;
 import com.pius.im.common.route.RouteHandle;
 import com.pius.im.common.route.RouteInfo;
 import com.pius.im.common.utils.RouteInfoParseUtil;
 import com.pius.im.service.user.model.req.*;
 import com.pius.im.service.user.model.resp.ImportOrDeleteUserResp;
+import com.pius.im.service.user.model.resp.UserOnlineStatusResp;
 import com.pius.im.service.user.service.ImUserService;
 import com.pius.im.service.user.service.ImUserStatusService;
 import com.pius.im.service.utils.ZKit;
@@ -83,6 +85,16 @@ public class ImUserController {
     public ResponseVO setUserCustomStatus(@RequestBody @Validated SetUserCustomStatusReq req) {
         imUserStatusService.setUserCustomStatus(req);
         return ResponseVO.successResponse();
+    }
+
+    @RequestMapping("/queryFriendOnlineStatus")
+    public ResponseVO<Map<String, UserOnlineStatusResp>> queryFriendOnlineStatus(@RequestBody @Validated RequestBase req) {
+        return ResponseVO.successResponse(imUserStatusService.queryFriendOnlineStatus(req));
+    }
+
+    @RequestMapping("/queryUserOnlineStatus")
+    public ResponseVO<Map<String, UserOnlineStatusResp>> queryUserOnlineStatus(@RequestBody @Validated PullUserOnlineStatusReq req) {
+        return ResponseVO.successResponse(imUserStatusService.queryUserOnlineStatus(req));
     }
 
 }

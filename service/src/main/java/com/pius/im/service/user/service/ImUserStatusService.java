@@ -1,8 +1,13 @@
 package com.pius.im.service.user.service;
 
+import com.pius.im.common.model.RequestBase;
 import com.pius.im.service.user.model.UserStatusChangeNotifyContent;
+import com.pius.im.service.user.model.req.PullUserOnlineStatusReq;
 import com.pius.im.service.user.model.req.SetUserCustomStatusReq;
 import com.pius.im.service.user.model.req.SubscribeUserOnlineStatusReq;
+import com.pius.im.service.user.model.resp.UserOnlineStatusResp;
+
+import java.util.Map;
 
 /**
  * @Author: Pius
@@ -15,5 +20,9 @@ public interface ImUserStatusService {
     void subscribeUserOnlineStatus(SubscribeUserOnlineStatusReq req);
 
     void setUserCustomStatus(SetUserCustomStatusReq req);
+
+    Map<String, UserOnlineStatusResp> queryFriendOnlineStatus(RequestBase req);
+
+    Map<String, UserOnlineStatusResp> queryUserOnlineStatus(PullUserOnlineStatusReq req);
 
 }
