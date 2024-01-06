@@ -34,7 +34,7 @@ public class ZKit {
     // ip+port
     public void createNode(String path) {
         if (!zkClient.exists(path)) {
-            zkClient.createPersistent(path);
+            zkClient.createEphemeral(path);
         }
     }
 }
