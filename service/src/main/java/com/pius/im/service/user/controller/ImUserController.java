@@ -16,7 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -42,17 +41,17 @@ public class ImUserController {
     @Autowired
     RouteHandle routeHandle;
 
-    @RequestMapping(value = "importUser", method = RequestMethod.POST)
+    @RequestMapping("importUser")
     public ResponseVO<ImportOrDeleteUserResp> importUser(@RequestBody @Validated ImportUserReq req) {
         return imUserService.importUser(req);
     }
 
-    @RequestMapping(value = "deleteUser", method = RequestMethod.POST)
+    @RequestMapping("deleteUser")
     public ResponseVO<ImportOrDeleteUserResp> deleteUser(@RequestBody @Validated DeleteUserReq req) {
         return imUserService.deleteUser(req);
     }
 
-    @RequestMapping(value = "login", method = RequestMethod.GET)
+    @RequestMapping(value = "login")
     public ResponseVO login(@RequestBody @Validated LoginReq req) {
         ResponseVO login = imUserService.login(req);
         if (login.isOk()) {
